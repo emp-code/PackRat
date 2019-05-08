@@ -451,14 +451,16 @@ static int packrat_write_zero(const char *pathPri, const char *pathPrd, const ch
 	if (flock(pri, LOCK_EX) != 0) {close(pri); close(prd); return -4;}
 	if (flock(prd, LOCK_EX) != 0) {close(pri); close(prd); return -5;}
 
+	const int infoBytes = ceil((bitsPos + bitsLen) / (double)8);
+	const int posBytes = ceil(bitsPos / (double)8);
+	const int lenBytes = ceil(bitsLen / (double)8);
+
+	const int id = (lseek(pri, 0, SEEK_END) - 5) / infoBytes; // Ignore first five bytes (the file header)
+
 	const off_t pos = packrat_addFile(prd, len, data);
 
 	const uint64_t upr_pos = pos;
 	const uint64_t upr_len = len;
-
-	const int infoBytes = ceil((bitsPos + bitsLen) / (double)8);
-	const int posBytes = ceil(bitsPos / (double)8);
-	const int lenBytes = ceil(bitsLen / (double)8);
 
 	char cpr_pos[posBytes]; simpleUint_toChar(cpr_pos, upr_pos, bitsPos);
 	char cpr_len[lenBytes]; simpleUint_toChar(cpr_len, upr_len, bitsLen);
@@ -477,7 +479,7 @@ static int packrat_write_zero(const char *pathPri, const char *pathPrd, const ch
 	close(pri);
 	close(prd);
 
-	if (ret == infoBytes) return 0;
+	if (ret == infoBytes) return id;
 
 	return -6;	
 }
