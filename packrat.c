@@ -459,11 +459,8 @@ static int packrat_write_zero(const char *pathPri, const char *pathPrd, const ch
 
 	const off_t pos = packrat_addFile(prd, len, data);
 
-	const uint64_t upr_pos = pos;
-	const uint64_t upr_len = len;
-
-	char cpr_pos[posBytes]; simpleUint_toChar(cpr_pos, upr_pos, bitsPos);
-	char cpr_len[lenBytes]; simpleUint_toChar(cpr_len, upr_len, bitsLen);
+	char cpr_pos[posBytes]; simpleUint_toChar(cpr_pos, pos, bitsPos);
+	char cpr_len[lenBytes]; simpleUint_toChar(cpr_len, len, bitsLen);
 
 	const int skipBytes = floor(bitsPos / (double)8);
 	const int skipBits = bitsPos % 8;
