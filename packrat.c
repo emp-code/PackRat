@@ -465,7 +465,7 @@ static int packrat_write_zero(const char *pathPri, const char *pathPrd, const ch
 	const int skipBytes = floor(bitsPos / (double)8);
 	const int skipBits = bitsPos % 8;
 
-	char cpr_full[8];
+	char cpr_full[infoBytes];
 	bitcopy(cpr_full, 0, cpr_pos, bitsPos);
 	bitcopy(cpr_full + skipBytes, skipBits, cpr_len, bitsLen);
 
