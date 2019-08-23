@@ -51,8 +51,8 @@ packrat -r -d example.prd -i example.pri -n 42 -f test.jpg\n\
 	return 0;
 }
 
-static int readFile(const char *path, char **data) {
-	int fd = open(path, O_RDONLY);
+static int readFile(const char * const path, char ** const data) {
+	const int fd = open(path, O_RDONLY);
 	if (fd < 0) return -1;
 
 	const off_t lenData = lseek(fd, 0, SEEK_END);
@@ -66,8 +66,8 @@ static int readFile(const char *path, char **data) {
 	return (ret == lenData) ? lenData : -2;
 }
 
-static int writeFile(const char *path, const char *data, const size_t lenData) {
-	int fd = open(path, O_WRONLY | O_CREAT, 0644);
+static int writeFile(const char * const path, const char * const data, const size_t lenData) {
+	const int fd = open(path, O_WRONLY | O_CREAT, 0644);
 	if (fd < 0) return -1;
 
 	write(fd, data, lenData);
@@ -76,7 +76,7 @@ static int writeFile(const char *path, const char *data, const size_t lenData) {
 	return 0;
 }
 
-static int getArgInt(char *argv[], const int n, const char *longname, int *i) {
+static int getArgInt(char * const argv[], const int n, const char * const longname, int * const i) {
 	if (n == 1) { // short form
 		(*i)++;
 		return strtol(argv[*i], NULL, 10);
@@ -86,7 +86,7 @@ static int getArgInt(char *argv[], const int n, const char *longname, int *i) {
 	}
 }
 
-static char *getArgStr(char *argv[], const int n, const char *longname, int *i) {
+static char *getArgStr(char * const argv[], const int n, const char * const longname, int * const i) {
 	if (n == 1) { // short form
 		(*i)++;
 		return argv[*i];
@@ -97,7 +97,7 @@ static char *getArgStr(char *argv[], const int n, const char *longname, int *i) 
 	}
 }
 
-static char getArgChar(char *argv[], const int n, const char *longname, int *i) {
+static char getArgChar(char * const argv[], const int n, const char * const longname, int * const i) {
 	if (n == 1) { // short form
 		(*i)++;
 		if (argv[*i][1] != 0x00) return 0x00;
@@ -112,8 +112,8 @@ static char getArgChar(char *argv[], const int n, const char *longname, int *i) 
 int main(int argc, char *argv[]) {
 	if (argc < 2) return printHelp();
 
-	char mode = 0x00;
-	char type = 0x00;
+	char mode = 0;
+	char type = 0;
 
 	char *prd = NULL;
 	char *pri = NULL;
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
 			return 1;
 		}
 
-		int n = (argv[i][1] == '-') ? 2 : 1;
+		const int n = (argv[i][1] == '-') ? 2 : 1;
 
 		switch(argv[i][n]) {
 			case 'c': if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--create") == 0) {mode = 'c';} break;
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
 
 		case 'r': { // Read
 			char *buf;
-			int lenFile = packrat_read(pri, prd, fileNum, &buf);
+			const int lenFile = packrat_read(pri, prd, fileNum, &buf);
 
 			if (lenFile < 1) {
 				return 1;
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
 				writeFile(path, buf, lenFile);
 
 			free(buf);
-		break; }
+		break;}
 
 		case 'w': { // Write
 			char *data = NULL;
@@ -196,13 +196,13 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
-			int ret = packrat_write(pri, prd, data, lenData);
+			const int ret = packrat_write(pri, prd, data, lenData);
 			if (ret < 0) {
 				printf("%d\n", ret);
 			}
 
 			free(data);
-		break; }
+		break;}
 	}
 
 	return 0;
