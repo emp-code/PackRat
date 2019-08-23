@@ -77,7 +77,7 @@
 #define INT_2P0 1
 
 // Get bit value, skipping first (skipBits) bits
-static int bitCheck(const char *source, int skipBits) {
+static int bitCheck(const char * const source, int skipBits) {
 	int byteBegin = 0;
 	int bitBegin = 0;
 
@@ -94,7 +94,7 @@ static int bitCheck(const char *source, int skipBits) {
 }
 
 // Store unsigned integer of 1-64 bits to a string
-static void simpleUint_toChar(char *target, uint64_t source, const int bitCount) {
+static void simpleUint_toChar(char * const target, uint64_t source, const int bitCount) {
 	switch(bitCount) { // no breaks
 		case 64: if (source >= INT_2P63) {BIT_SET(target[7], 7); source -= INT_2P63;} else BIT_CLEAR(target[7], 7);
 		case 63: if (source >= INT_2P62) {BIT_SET(target[7], 6); source -= INT_2P62;} else BIT_CLEAR(target[7], 6);
@@ -171,7 +171,7 @@ static void simpleUint_toChar(char *target, uint64_t source, const int bitCount)
 }
 
 // Get unsigned integer of 1-64 bits from a char array of 1-8 bytes
-static uint64_t simpleUint_toInt(const char *c, const int skipBits, const int bitCount) {
+static uint64_t simpleUint_toInt(const char * const c, const int skipBits, const int bitCount) {
 	if (bitCount < 1 || bitCount > 64) return 0;
 
 	uint64_t result = 0;
@@ -247,7 +247,7 @@ static uint64_t simpleUint_toInt(const char *c, const int skipBits, const int bi
 }
 
 // Read: Pack Rat Zero (PR0)
-static int packrat_read_zero(int pri, int bitsPos, int bitsLen, const char *pathPrd, const uint64_t id, char **data) {
+static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen, const char * const pathPrd, const int id, char ** const data) {
 	if (pri < 0) return -1;
 
 	const int infoBytes = ceil((bitsPos + bitsLen) / (double)8);
@@ -267,7 +267,7 @@ static int packrat_read_zero(int pri, int bitsPos, int bitsLen, const char *path
 	if (len < 1) return -2;
 
 	// Pack Rat Data: File contents
-	int prd = open(pathPrd, O_RDONLY);
+	const int prd = open(pathPrd, O_RDONLY);
 	if (prd == -1) return -3;
 
 	*data = malloc(len + 1);
@@ -284,14 +284,14 @@ static int packrat_read_zero(int pri, int bitsPos, int bitsLen, const char *path
 	return len;
 }
 
-static uint64_t getPos(int pri, const int infoBytes, const int id, const int bitsPos) {
+static uint64_t getPos(const int pri, const int infoBytes, const int id, const int bitsPos) {
 	char info[infoBytes];
 	const int bytesRead = pread(pri, info, infoBytes, 5 + id * infoBytes);
 	return (bytesRead != infoBytes) ? -1 : simpleUint_toInt(info, 0, bitsPos);
 }
 
 // Read: Pack Rat Compact (PRC)
-static int packrat_read_compact(int pri, const int bitsPos, const char *pathPrd, const uint64_t id, char **data) {
+static int packrat_read_compact(const int pri, const int bitsPos, const char *pathPrd, const int id, char ** const data) {
 	if (pri < 0) return -1;
 
 	const off_t endPri = lseek(pri, 0, SEEK_END);
@@ -341,12 +341,12 @@ static int packrat_read_compact(int pri, const int bitsPos, const char *pathPrd,
 
 // Read: Main function - chooses format automatically.
 // Returns length of file on success, or a negative error code on failure
-int packrat_read(const char *pathPri, const char *pathPrd, const uint64_t id, char **data) {
-	int pri = open(pathPri, O_RDONLY);
+int packrat_read(const char * const pathPri, const char * const pathPrd, const int id, char ** const data) {
+	const int pri = open(pathPri, O_RDONLY);
 	if (pri == -1) return -1;
 
 	char header[5];
-	ssize_t bytesRead = read(pri, header, 5);
+	const ssize_t bytesRead = read(pri, header, 5);
 	if (bytesRead != 5) return -2;
 
 	if (header[0] != 'P' || header[1] != 'R') return -3;
@@ -363,7 +363,7 @@ int packrat_read(const char *pathPri, const char *pathPrd, const uint64_t id, ch
 }
 
 // Append data to the .prd file
-static off_t packrat_addFile(int prd, const size_t len, const char *data) {
+static off_t packrat_addFile(const int prd, const size_t len, const char * const data) {
 	if (len < 1 || data == NULL) return 0;
 
 	const off_t pos = lseek(prd, 0, SEEK_END);
@@ -375,13 +375,13 @@ static off_t packrat_addFile(int prd, const size_t len, const char *data) {
 }
 
 // Write: Pack Rat Compact (PRC)
-static int packrat_write_compact(const char *pathPri, const char *pathPrd, const char *data, const off_t len, const int bitsPos) {
+static int packrat_write_compact(const char * const pathPri, const char * const pathPrd, const char * const data, const off_t len, const int bitsPos) {
 	if (len < 1 || data == NULL || bitsPos < 1 || bitsPos > 99) return -1;
 
-	int pri = open(pathPri, O_WRONLY | O_APPEND);
+	const int pri = open(pathPri, O_WRONLY | O_APPEND);
 	if (pri < 0) return -2;
 
-	int prd = open(pathPrd, O_WRONLY | O_APPEND);
+	const int prd = open(pathPrd, O_WRONLY | O_APPEND);
 	if (prd < 0) {close(pri); return -3;}
 
 	// Lock both files
@@ -409,7 +409,7 @@ static int packrat_write_compact(const char *pathPri, const char *pathPrd, const
 	return -6;
 }
 
-static void bitcopy(char *target, const int targetBitBegin, const char *source, int len) {
+static void bitcopy(char * const target, const int targetBitBegin, const char * const source, int len) {
 	int sourceByte = 0;
 	int sourceBit = 0;
 
@@ -438,13 +438,13 @@ static void bitcopy(char *target, const int targetBitBegin, const char *source, 
 }
 
 // Write: Pack Rat Zero (PR0)
-static int packrat_write_zero(const char *pathPri, const char *pathPrd, const char *data, const off_t len, const int bitsPos, const int bitsLen) {
+static int packrat_write_zero(const char * const pathPri, const char * const pathPrd, const char * const data, const off_t len, const int bitsPos, const int bitsLen) {
 	if (bitsPos < 1 || bitsPos > 99 || bitsLen < 1 || bitsLen > 99) return -1;
 
-	int pri = open(pathPri, O_WRONLY | O_APPEND);
+	const int pri = open(pathPri, O_WRONLY | O_APPEND);
 	if (pri < 0) return -2;
 
-	int prd = open(pathPrd, O_WRONLY | O_APPEND);
+	const int prd = open(pathPrd, O_WRONLY | O_APPEND);
 	if (prd < 0) {close(pri); return -3;}
 
 	// Lock both files
@@ -478,15 +478,15 @@ static int packrat_write_zero(const char *pathPri, const char *pathPrd, const ch
 
 	if (ret == infoBytes) return id;
 
-	return -6;	
+	return -6;
 }
 
-static char packrat_write_getBits(const char *pathPri, int *bitsPos, int *bitsLen) {
-	int pri = open(pathPri, O_RDONLY);
+static char packrat_write_getBits(const char * const pathPri, int * const bitsPos, int * const bitsLen) {
+	const int pri = open(pathPri, O_RDONLY);
 	if (pri == -1) return -10;
 
 	char header[5];
-	ssize_t bytesRead = read(pri, header, 5);
+	const ssize_t bytesRead = read(pri, header, 5);
 	if (bytesRead != 5) return -11;
 
 	if (header[0] != 'P' || header[1] != 'R') return -12;
@@ -510,7 +510,7 @@ static char packrat_write_getBits(const char *pathPri, int *bitsPos, int *bitsLe
 	return type;
 }
 
-int packrat_write(const char *pathPri, const char *pathPrd, const char *data, const off_t len) {
+int packrat_write(const char * const pathPri, const char * const pathPrd, const char * const data, const off_t len) {
 	int bitsPos;
 	int bitsLen;
 
@@ -522,14 +522,14 @@ int packrat_write(const char *pathPri, const char *pathPrd, const char *data, co
 	return -100;
 }
 
-int packrat_create(const char *pathPri, const char *pathPrd, const int bitsPos, const int bitsLen, const char type) {
+int packrat_create(const char * const pathPri, const char * const pathPrd, const int bitsPos, const int bitsLen, const char type) {
 	if (bitsPos < 1 || bitsPos > 99 || (type == '0' && (bitsLen < 1 || bitsLen > 99))) return -1;
 
-	int prd = open(pathPrd, O_WRONLY | O_CREAT | O_EXCL, 0644);
+	const int prd = open(pathPrd, O_WRONLY | O_CREAT | O_EXCL, 0644);
 	if (prd < 0) return -2;
 	close(prd);
 
-	int pri = open(pathPri, O_WRONLY | O_CREAT | O_EXCL, 0644);
+	const int pri = open(pathPri, O_WRONLY | O_CREAT | O_EXCL, 0644);
 	if (pri < 0) return -3;
 	if (flock(pri, LOCK_EX) != 0) {close(pri); return -4;}
 
