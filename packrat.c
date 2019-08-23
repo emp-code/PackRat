@@ -516,6 +516,8 @@ int packrat_write(const char * const pathPri, const char * const pathPrd, const 
 
 	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
 
+	if (type == '0' && len > pow(2, bitsLen)) return -90;
+
 	if (type == '0') return packrat_write_zero(pathPri, pathPrd, data, len, bitsPos, bitsLen);
 	if (type == 'C') return packrat_write_compact(pathPri, pathPrd, data, len, bitsPos);
 
