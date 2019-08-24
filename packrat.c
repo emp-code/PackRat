@@ -548,3 +548,127 @@ int packrat_create(const char * const pathPri, const char * const pathPrd, const
 	close(pri);
 	return 0;
 }
+
+static int packrat_update_zero(const char * const pathPri, const char * const pathPrd, const int id, const char * const data, const off_t len, const int bitsPos, const int bitsLen) {
+	if (bitsPos < 1 || bitsPos > 99 || bitsLen < 1 || bitsLen > 99) return -1;
+
+	const int pri = open(pathPri, O_RDWR);
+	if (pri < 0) return -2;
+
+	const int prd = open(pathPrd, O_WRONLY);
+	if (prd < 0) {close(pri); return -3;}
+
+	// Lock both files
+	if (flock(pri, LOCK_EX) != 0) {close(pri); close(prd); return -4;}
+	if (flock(prd, LOCK_EX) != 0) {flock(pri, LOCK_UN); close(pri); close(prd); return -5;}
+
+	const int infoBytes = ceil((bitsPos + bitsLen) / (double)8);
+	const int posBytes = ceil(bitsPos / (double)8);
+	const int lenBytes = ceil(bitsLen / (double)8);
+
+	// Pack Rat Index: Position and Length
+	char info[infoBytes];
+	int bytesRead = pread(pri, info, infoBytes, 5 + id * infoBytes);
+	if (bytesRead != infoBytes) {
+		flock(pri, LOCK_UN);
+		flock(prd, LOCK_UN);
+		close(pri);
+		close(prd);
+		return -6;
+	}
+
+	const uint64_t oldPos = simpleUint_toInt(info, 0,       bitsPos);
+	const uint64_t oldLen = simpleUint_toInt(info, bitsPos, bitsLen);
+
+	if (oldLen == len) {
+		const ssize_t bytesWritten = pwrite(prd, data, len, oldPos);
+
+		flock(pri, LOCK_UN);
+		flock(prd, LOCK_UN);
+		close(pri);
+		close(prd);
+
+		if (bytesWritten != len) return -8;
+	} else if (len < oldLen) {
+		ssize_t bytesWritten = pwrite(prd, data, len, oldPos);
+
+		flock(prd, LOCK_UN);
+		close(prd);
+
+		if (bytesWritten != len) {
+			flock(pri, LOCK_UN);
+			close(pri);
+			return -7;
+		}
+
+		char cpr_pos[posBytes];
+		char cpr_len[lenBytes];
+		simpleUint_toChar(cpr_pos, oldPos, bitsPos);
+		simpleUint_toChar(cpr_len, len, bitsLen);
+
+		const int skipBytes = floor(bitsPos / (double)8);
+		const int skipBits = bitsPos % 8;
+
+		char cpr_full[infoBytes];
+		bitcopy(cpr_full, 0, cpr_pos, bitsPos);
+		bitcopy(cpr_full + skipBytes, skipBits, cpr_len, bitsLen);
+
+		bytesWritten = pwrite(pri, cpr_full, infoBytes, 5 + id * infoBytes);
+
+		flock(pri, LOCK_UN);
+		close(pri);
+
+		if (bytesWritten != infoBytes) return -8;
+	} else /* len > oldLen */{
+		const off_t newPos = lseek(prd, 0, SEEK_END);
+		ssize_t bytesWritten = write(prd, data, len);
+
+		flock(prd, LOCK_UN);
+		close(prd);
+
+		if (bytesWritten != len) {
+			flock(pri, LOCK_UN);
+			close(pri);
+			return -7;
+		}
+
+		char cpr_pos[posBytes];
+		char cpr_len[lenBytes];
+		simpleUint_toChar(cpr_pos, newPos, bitsPos);
+		simpleUint_toChar(cpr_len, len, bitsLen);
+
+		const int skipBytes = floor(bitsPos / (double)8);
+		const int skipBits = bitsPos % 8;
+
+		char cpr_full[infoBytes];
+		bitcopy(cpr_full, 0, cpr_pos, bitsPos);
+		bitcopy(cpr_full + skipBytes, skipBits, cpr_len, bitsLen);
+
+		bytesWritten = pwrite(pri, cpr_full, infoBytes, 5 + id * infoBytes);
+
+		flock(pri, LOCK_UN);
+		close(pri);
+
+		if (bytesWritten != infoBytes) return -8;
+	}
+
+	return 0;
+}
+
+int packrat_update(const char * const pathPri, const char * const pathPrd, const int id, const char * const data, const off_t len) {
+	if (pathPri == NULL || pathPrd == NULL || id < 0 || data == NULL || len < 1) return -1;
+
+	int bitsPos;
+	int bitsLen;
+
+	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
+
+	if (type == '0' && len > pow(2, bitsLen)) return -90;
+
+// TODO check if requested ID is too high
+
+	if (type == '0') return packrat_update_zero(pathPri, pathPrd, id, data, len, bitsPos, bitsLen);
+//	if (type == 'C') return packrat_update_compact(pathPri, pathPrd, data, len, bitsPos);
+
+	return -100;
+}

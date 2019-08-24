@@ -49,5 +49,14 @@ for i in {0..100}; do
 	cmp "/tmp/packrat-$$.tmp.1" "/tmp/packrat-$$.out"
 	rm "/tmp/packrat-$$.out"
 
+	# Data replacement test
+	if [ $t == "0" ]; then
+		./packrat --update --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.tmp.0"
+
+		./packrat --read --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.out"
+		cmp "/tmp/packrat-$$.tmp.0" "/tmp/packrat-$$.out"
+		rm "/tmp/packrat-$$.out"
+	fi
+
 	rm "/tmp/packrat-$$.tmp.0" "/tmp/packrat-$$.tmp.1" "/tmp/test-$$.prd" "/tmp/test-$$.pri"
 done

@@ -61,6 +61,20 @@ Read file number 42 from 'example.prd' and 'example.pri' (starts from 0, hence t
 
 `packrat --read --data=example.prd --index=example.pri --num=42 --file=test.jpg`
 
+Replace file number 25 with 'sample.jpg' in 'example.prd' and 'example.pri' (see Updating Data below for important details)
+
+`packrat --update --data=example.prd --index=example.pri --num=25 --file=sample.jpg`
+
+Updating Data
+====
+
+Pack Rat Zero supports updating (replacing) files, with the following limitations:
+* If the replacement data is larger: the old data will remain, but cannot be accessed through Pack Rat
+* If the replacement data is smaller: part of the old data will remain, but cannot be accessed through Pack Rat
+* If the sizes match: the old data will be replaced by the new
+
+Recreating the entire archive can be done to bypass these limitations.
+
 Index (.pri) Format
 ====
 

@@ -9,6 +9,7 @@
 
 #include "packrat.h"
 
+
 static int printHelp() {
 	printf("\
 Pack Rat Archival System by EMPcode\n\n\
@@ -17,6 +18,7 @@ Mode:\n\
 -h, --help    Show this help\n\
 -r, --read    Read a file from an archive\n\
 -w, --write   Write a file to an archive\n\
+-u, --update  Update (replace) a file in an archive\n\
 \n\
 Global options:\n\
 -d FILE, --data=FILE   Pack Rat Data file to use\n\
@@ -46,6 +48,10 @@ packrat -w -d example.prd -i example.pri -f example.jpg\n\
 Read file number 42 from 'example.prd' and 'example.pri'\n\
 packrat --read --data=example.prd --index=example.pri --num=42 --file=test.jpg\n\
 packrat -r -d example.prd -i example.pri -n 42 -f test.jpg\n\
+\n\
+Replace file number 25 with 'sample.jpg' in 'example.prd' and 'example.pri'\n\
+packrat --update --data=example.prd --index=example.pri --num=25 --file=sample.jpg\n\
+packrat -u -d example.prd -i example.pri -n 25 -f sample.jpg\n\
 ");
 
 	return 0;
@@ -135,6 +141,7 @@ int main(int argc, char *argv[]) {
 			case 'c': if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--create") == 0) {mode = 'c';} break;
 			case 'r': if (strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--read")   == 0) {mode = 'r';} break;
 			case 'w': if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--write")  == 0) {mode = 'w';} break;
+			case 'u': if (strcmp(argv[i], "-u") == 0 || strcmp(argv[i], "--update") == 0) {mode = 'u';} break;
 
 			case 'd': prd  = getArgStr(argv, n, "--data=",  &i); break;
 			case 'i': pri  = getArgStr(argv, n, "--index=", &i); break;
@@ -197,6 +204,29 @@ int main(int argc, char *argv[]) {
 			}
 
 			const int ret = packrat_write(pri, prd, data, lenData);
+			if (ret < 0) {
+				printf("%d\n", ret);
+			}
+
+			free(data);
+		break;}
+
+		case 'u': { // Update (replace)
+			char *data = NULL;
+			int lenData;
+
+			if (strcmp(path, "-") == 0) {
+				puts("TODO: stdin");
+				return 1;
+			} else {
+				lenData = readFile(path, &data);
+				if (lenData < 1) {
+					if (data != NULL) free(data);
+					return 1;
+				}
+			}
+
+			const int ret = packrat_update(pri, prd, fileNum, data, lenData);
 			if (ret < 0) {
 				printf("%d\n", ret);
 			}
