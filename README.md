@@ -53,17 +53,17 @@ Create a new Pack Rat Zero archive under the files 'example.prd' and 'example.pr
 
 `packrat --create --data=example.prd --index=example.pri --posbits=40 --lenbits=16 --type=0`
 
-Write the file 'example.jpg' to 'example.prd' and 'example.pri':
+Write the file 'test.jpg' to 'example.prd' and 'example.pri':
 
-`packrat --write --data=example.prd --index=example.pri --file=example.jpg`
+`packrat --write --data=example.prd --index=example.pri --file=test.jpg`
 
 Read file number 42 from 'example.prd' and 'example.pri' (starts from 0, hence this is the 43rd file):
 
 `packrat --read --data=example.prd --index=example.pri --num=42 --file=test.jpg`
 
-Replace file number 25 with 'sample.jpg' in 'example.prd' and 'example.pri' (see Updating Data below for important details)
+Replace file number 25 with 'test.jpg' in 'example.prd' and 'example.pri' (see Updating Data below for important details)
 
-`packrat --update --data=example.prd --index=example.pri --num=25 --file=sample.jpg`
+`packrat --update --data=example.prd --index=example.pri --num=25 --file=test.jpg`
 
 Updating Data
 ====

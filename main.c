@@ -17,8 +17,8 @@ Mode:\n\
 -c, --create  Create a new archive\n\
 -h, --help    Show this help\n\
 -r, --read    Read a file from an archive\n\
--w, --write   Write a file to an archive\n\
 -u, --update  Update (replace) a file in an archive\n\
+-w, --write   Write a file to an archive\n\
 \n\
 Global options:\n\
 -d FILE, --data=FILE   Pack Rat Data file to use\n\
@@ -30,8 +30,12 @@ Create options:\n\
 -t NUM, --type=TYPE    Type of archive to make; '0' for Zero, 'C' for Compact\n\
 \n\
 Read options:\n\
--n NUM, --num=NUM     File number to read, starting from zero\n\
 -f FILE, --file=FILE  Output file path (standard output if omitted)\n\
+-n NUM, --num=NUM     File number to read (starts from zero)\n\
+\n\
+Update options:\n\
+-f FILE, --file=FILE  Input file path (standard input if omitted)\n\
+-n NUM, --num=NUM     File number to update (starts from zero)\n\
 \n\
 Write options:\n\
 -f FILE, --file=FILE  Input file path (standard input if omitted)\n\
@@ -41,17 +45,17 @@ Create a new Pack Rat Zero archive under the files 'example.prd' and 'example.pr
 packrat --create --data=example.prd --index=example.pri --posbits=40 --lenbits=24 --type=0\n\
 packrat -c -d example.prd -i example.pri -p 40 -l 24 -t 0\n\
 \n\
-Write the file 'example.jpg' to 'example.prd' and 'example.pri'\n\
-packrat --write --data=example.prd --index=example.pri --file=example.jpg\n\
-packrat -w -d example.prd -i example.pri -f example.jpg\n\
+Write the file 'test.jpg' to 'example.prd' and 'example.pri'\n\
+packrat --write --data=example.prd --index=example.pri --file=test.jpg\n\
+packrat -w -d example.prd -i example.pri -f test.jpg\n\
 \n\
-Read file number 42 from 'example.prd' and 'example.pri'\n\
+Read file number 42 from 'example.prd' and 'example.pri', writing to 'test.jpg'\n\
 packrat --read --data=example.prd --index=example.pri --num=42 --file=test.jpg\n\
 packrat -r -d example.prd -i example.pri -n 42 -f test.jpg\n\
 \n\
-Replace file number 25 with 'sample.jpg' in 'example.prd' and 'example.pri'\n\
-packrat --update --data=example.prd --index=example.pri --num=25 --file=sample.jpg\n\
-packrat -u -d example.prd -i example.pri -n 25 -f sample.jpg\n\
+Replace file number 25 with 'test.jpg' in 'example.prd' and 'example.pri'\n\
+packrat --update --data=example.prd --index=example.pri --num=25 --file=test.jpg\n\
+packrat -u -d example.prd -i example.pri -n 25 -f test.jpg\n\
 ");
 
 	return 0;
