@@ -93,6 +93,7 @@ static int bitCheck(const char * const source, int skipBits) {
 	return BIT_CHECK(source[byteBegin], bitBegin);
 }
 
+
 // Store unsigned integer of 1-64 bits to a string
 static void simpleUint_toChar(char * const target, uint64_t source, const int bitCount) {
 	switch(bitCount) { // no breaks
@@ -565,8 +566,6 @@ int packrat_create(const char * const pathPri, const char * const pathPrd, const
 }
 
 static int packrat_update_zero(const char * const pathPri, const char * const pathPrd, const int id, const char * const data, const off_t len, const int bitsPos, const int bitsLen) {
-	if (pathPri == NULL || pathPrd == NULL || id < 0 || data == NULL || len < 1 || bitsPos < 1 || bitsPos > 99 || bitsLen < 1 || bitsLen > 99) return -1;
-
 	const int pri = open(pathPri, O_RDWR);
 	if (pri < 0) return -2;
 
@@ -677,6 +676,7 @@ int packrat_update(const char * const pathPri, const char * const pathPrd, const
 	int bitsLen;
 
 	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
+	if (bitsPos < 1 || bitsPos > 99 || bitsLen < 1 || bitsLen > 99) return -1;
 
 	if (type == '0' && len > pow(2, bitsLen)) return -90;
 
