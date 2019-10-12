@@ -504,11 +504,11 @@ int packrat_create(const char * const pathPri, const char * const pathPrd, const
 	header[3] = bitsPos;
 	header[4] = (type == 'C') ? 0 : bitsLen;
 
-	write(pri, header, 5);
+	const ssize_t bytesWritten = write(pri, header, 5);
 
 	flock(pri, LOCK_UN);
 	close(pri);
-	return 0;
+	return (bytesWritten == 5) ? 0 : -1;
 }
 
 static int packrat_update_zero(const char * const pathPri, const char * const pathPrd, const int id, const char * const data, const off_t len, const int bitsPos, const int bitsLen) {
