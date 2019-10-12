@@ -479,7 +479,7 @@ int packrat_write(const char * const pathPri, const char * const pathPrd, const 
 	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
 	if (bitsPos < 1 || bitsPos > 99 || (type == '0' && (bitsLen < 1 || bitsLen > 99))) return -1;
 
-	if (type == '0' && len > (UINT64_MAX >> (64 - bitsLen))) return -1;
+	if (type == '0' && (uint64_t)len > (UINT64_MAX >> (64 - bitsLen))) return -1;
 
 	if (type == '0') return packrat_write_zero(pathPri, pathPrd, data, len, bitsPos, bitsLen);
 	if (type == 'C') return packrat_write_compact(pathPri, pathPrd, data, len, bitsPos);
@@ -541,7 +541,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 	const uint64_t oldPos = simpleUint_toInt(info, 0,       bitsPos);
 	const uint64_t oldLen = simpleUint_toInt(info, bitsPos, bitsLen);
 
-	if (oldLen == len) {
+	if (oldLen == (uint64_t)len) {
 		const ssize_t bytesWritten = pwrite(prd, data, len, oldPos);
 
 		flock(pri, LOCK_UN);
@@ -550,7 +550,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		close(prd);
 
 		if (bytesWritten != len) return -8;
-	} else if (len < oldLen) {
+	} else if ((uint64_t)len < oldLen) {
 		ssize_t bytesWritten = pwrite(prd, data, len, oldPos);
 
 		flock(prd, LOCK_UN);
@@ -627,7 +627,7 @@ int packrat_update(const char * const pathPri, const char * const pathPrd, const
 	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
 	if (bitsPos < 1 || bitsPos > 99 || bitsLen < 1 || bitsLen > 99) return -1;
 
-	if (type == '0' && len > (UINT64_MAX >> (64 - bitsLen))) return -90;
+	if (type == '0' && (uint64_t)len > (UINT64_MAX >> (64 - bitsLen))) return -90;
 
 // TODO check if requested ID is too high
 
