@@ -27,9 +27,9 @@ for i in {0..100}; do
 	head -c $size1 /dev/urandom > "/tmp/packrat-$$.tmp.0"
 	head -c $size2 /dev/urandom > "/tmp/packrat-$$.tmp.1"
 
-	./packrat --create --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --posbits=$posBits --lenbits=$lenBits --type=$t
-	./packrat --write --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" -f "/tmp/packrat-$$.tmp.0"
-	./packrat --write --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" -f "/tmp/packrat-$$.tmp.1"
+	valgrind -q --track-origins=yes --leak-check=full --exit-on-first-error=yes --error-exitcode=1 ./packrat --create --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --posbits=$posBits --lenbits=$lenBits --type=$t
+	valgrind -q --track-origins=yes --leak-check=full --exit-on-first-error=yes --error-exitcode=1 ./packrat --write --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" -f "/tmp/packrat-$$.tmp.0"
+	valgrind -q --track-origins=yes --leak-check=full --exit-on-first-error=yes --error-exitcode=1 ./packrat --write --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" -f "/tmp/packrat-$$.tmp.1"
 
 	# .prd should match a combination of the two test files
 	cat "/tmp/packrat-$$.tmp.0" "/tmp/packrat-$$.tmp.1" > "/tmp/packrat-$$.tmp"
@@ -41,19 +41,19 @@ for i in {0..100}; do
 	let "priBytes = 5 + (infoBytes * 2)"
 	if [ $priSize -ne $priBytes ]; then echo ".pri size ($priSize) does not match expected value ($priBytes)"; fi
 
-	./packrat --read --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=0 --file="/tmp/packrat-$$.out"
+	valgrind -q --track-origins=yes --leak-check=full --exit-on-first-error=yes --error-exitcode=1 ./packrat --read --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=0 --file="/tmp/packrat-$$.out"
 	cmp "/tmp/packrat-$$.tmp.0" "/tmp/packrat-$$.out"
 	rm "/tmp/packrat-$$.out"
 
-	./packrat --read --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.out"
+	valgrind -q --track-origins=yes --leak-check=full --exit-on-first-error=yes --error-exitcode=1 ./packrat --read --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.out"
 	cmp "/tmp/packrat-$$.tmp.1" "/tmp/packrat-$$.out"
 	rm "/tmp/packrat-$$.out"
 
 	# Data replacement test
 	if [ $t == "0" ]; then
-		./packrat --update --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.tmp.0"
+		valgrind -q --track-origins=yes --leak-check=full --exit-on-first-error=yes --error-exitcode=1 ./packrat --update --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.tmp.0"
 
-		./packrat --read --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.out"
+		valgrind -q --track-origins=yes --leak-check=full --exit-on-first-error=yes --error-exitcode=1 ./packrat --read --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.out"
 		cmp "/tmp/packrat-$$.tmp.0" "/tmp/packrat-$$.out"
 		rm "/tmp/packrat-$$.out"
 	fi
