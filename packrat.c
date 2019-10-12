@@ -233,7 +233,7 @@ static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen
 static uint64_t getPos(const int pri, const int infoBytes, const int id, const int bitsPos) {
 	char info[infoBytes];
 	const ssize_t bytesRead = pread(pri, info, infoBytes, 5 + id * infoBytes);
-	return (bytesRead != infoBytes) ? -1 : simpleUint_toInt(info, 0, bitsPos);
+	return (bytesRead != infoBytes) ? UINT64_MAX : simpleUint_toInt(info, 0, bitsPos);
 }
 
 // Read: Pack Rat Compact (PRC)
@@ -247,7 +247,7 @@ static int packrat_read_compact(const int pri, const int bitsPos, const char *pa
 	int prd;
 
 	const uint64_t pos = getPos(pri, infoBytes, id, bitsPos);
-	if (pos < 0) return -2;
+	if (pos == UINT64_MAX) return -2;
 
 	// Pack Rat Data: File contents
 	if ((5 + (id + 1) * infoBytes) >= endPri) {
