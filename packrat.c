@@ -362,9 +362,9 @@ static int packrat_write_compact(const char * const pathPri, const char * const 
 	return -6;
 }
 
-static void bitcopy(char * const target, const int targetBitBegin, const char * const source, int len) {
+static void bitcpy(char * const target, const char * const source, const int targetBitBegin, const int sourceBitBegin, int len) {
 	int sourceByte = 0;
-	int sourceBit = 0;
+	int sourceBit = sourceBitBegin;
 
 	int targetByte = 0;
 	int targetBit = targetBitBegin;
@@ -425,8 +425,8 @@ static int packrat_write_zero(const char * const pathPri, const char * const pat
 
 	char cpr_full[infoBytes];
 	bzero(cpr_full, infoBytes);
-	bitcopy(cpr_full, 0, cpr_pos, bitsPos);
-	bitcopy(cpr_full + skipBytes, skipBits, cpr_len, bitsLen);
+	bitcpy(cpr_full, cpr_pos, 0, 0, bitsPos);
+	bitcpy(cpr_full + skipBytes, cpr_len, skipBits, 0, bitsLen);
 
 	const int ret = write(pri, cpr_full, infoBytes);
 
@@ -571,8 +571,8 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 
 		char cpr_full[infoBytes];
 		bzero(cpr_full, infoBytes);
-		bitcopy(cpr_full, 0, cpr_pos, bitsPos);
-		bitcopy(cpr_full + skipBytes, skipBits, cpr_len, bitsLen);
+		bitcpy(cpr_full, cpr_pos, 0, 0, bitsPos);
+		bitcpy(cpr_full + skipBytes, cpr_len, skipBits, 0, bitsLen);
 
 		bytesWritten = pwrite(pri, cpr_full, infoBytes, 5 + id * infoBytes);
 
@@ -603,8 +603,8 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 
 		char cpr_full[infoBytes];
 		bzero(cpr_full, infoBytes);
-		bitcopy(cpr_full, 0, cpr_pos, bitsPos);
-		bitcopy(cpr_full + skipBytes, skipBits, cpr_len, bitsLen);
+		bitcpy(cpr_full, cpr_pos, 0, 0, bitsPos);
+		bitcpy(cpr_full + skipBytes, cpr_len, skipBits, 0, bitsLen);
 
 		bytesWritten = pwrite(pri, cpr_full, infoBytes, 5 + id * infoBytes);
 
