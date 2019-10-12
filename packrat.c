@@ -425,6 +425,7 @@ static int packrat_write_zero(const char * const pathPri, const char * const pat
 	const int skipBits = bitsPos % 8;
 
 	char cpr_full[infoBytes];
+	bzero(cpr_full, infoBytes);
 	bitcopy(cpr_full, 0, cpr_pos, bitsPos);
 	bitcopy(cpr_full + skipBytes, skipBits, cpr_len, bitsLen);
 
@@ -570,6 +571,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		const int skipBits = bitsPos % 8;
 
 		char cpr_full[infoBytes];
+		bzero(cpr_full, infoBytes);
 		bitcopy(cpr_full, 0, cpr_pos, bitsPos);
 		bitcopy(cpr_full + skipBytes, skipBits, cpr_len, bitsLen);
 
@@ -601,6 +603,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		const int skipBits = bitsPos % 8;
 
 		char cpr_full[infoBytes];
+		bzero(cpr_full, infoBytes);
 		bitcopy(cpr_full, 0, cpr_pos, bitsPos);
 		bitcopy(cpr_full + skipBytes, skipBits, cpr_len, bitsLen);
 
