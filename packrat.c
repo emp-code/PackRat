@@ -349,6 +349,7 @@ static int packrat_write_compact(const char * const pathPri, const char * const 
 	}
 
 	char cpr_pos[infoBytes];
+	bzero(cpr_pos, infoBytes);
 	simpleUint_toChar(cpr_pos, pos, bitsPos);
 
 	const int ret = write(pri, cpr_pos, infoBytes);
