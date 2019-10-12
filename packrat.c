@@ -342,6 +342,8 @@ static int packrat_read_compact(const int pri, const int bitsPos, const char *pa
 // Read: Main function - chooses format automatically.
 // Returns length of file on success, or a negative error code on failure
 int packrat_read(const char * const pathPri, const char * const pathPrd, const int id, char ** const data) {
+	if (pathPri == NULL || pathPrd == NULL || id < 0 || data == NULL) return -1;
+
 	const int pri = open(pathPri, O_RDONLY);
 	if (pri == -1) return -1;
 
@@ -376,8 +378,6 @@ static off_t packrat_addFile(const int prd, const size_t len, const char * const
 
 // Write: Pack Rat Compact (PRC)
 static int packrat_write_compact(const char * const pathPri, const char * const pathPrd, const char * const data, const off_t len, const int bitsPos) {
-	if (len < 1 || data == NULL || bitsPos < 1 || bitsPos > 99) return -1;
-
 	const int pri = open(pathPri, O_WRONLY | O_APPEND);
 	if (pri < 0) return -2;
 
@@ -393,6 +393,13 @@ static int packrat_write_compact(const char * const pathPri, const char * const 
 	const int id = (lseek(pri, 0, SEEK_END) - 5) / infoBytes; // Ignore first five bytes (the file header)
 
 	const off_t pos = packrat_addFile(prd, len, data);
+	if (pos < 0) {
+		flock(pri, LOCK_UN);
+		flock(prd, LOCK_UN);
+		close(pri);
+		close(prd);
+		return pos;
+	}
 
 	char cpr_pos[infoBytes];
 	simpleUint_toChar(cpr_pos, pos, bitsPos);
@@ -439,8 +446,6 @@ static void bitcopy(char * const target, const int targetBitBegin, const char * 
 
 // Write: Pack Rat Zero (PR0)
 static int packrat_write_zero(const char * const pathPri, const char * const pathPrd, const char * const data, const off_t len, const int bitsPos, const int bitsLen) {
-	if (bitsPos < 1 || bitsPos > 99 || bitsLen < 1 || bitsLen > 99) return -1;
-
 	const int pri = open(pathPri, O_WRONLY | O_APPEND);
 	if (pri < 0) return -2;
 
@@ -458,6 +463,13 @@ static int packrat_write_zero(const char * const pathPri, const char * const pat
 	const int id = (lseek(pri, 0, SEEK_END) - 5) / infoBytes; // Ignore first five bytes (the file header)
 
 	const off_t pos = packrat_addFile(prd, len, data);
+	if (pos < 0) {
+		flock(pri, LOCK_UN);
+		flock(prd, LOCK_UN);
+		close(pri);
+		close(prd);
+		return pos;
+	}
 
 	char cpr_pos[posBytes]; simpleUint_toChar(cpr_pos, pos, bitsPos);
 	char cpr_len[lenBytes]; simpleUint_toChar(cpr_len, len, bitsLen);
@@ -511,12 +523,15 @@ static char packrat_write_getBits(const char * const pathPri, int * const bitsPo
 }
 
 int packrat_write(const char * const pathPri, const char * const pathPrd, const char * const data, const off_t len) {
+	if (pathPri == NULL || pathPrd == NULL || data == NULL || len < 1) return -1;
+
 	int bitsPos;
 	int bitsLen;
 
 	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
+	if (bitsPos < 1 || bitsPos > 99 || (type == '0' && (bitsLen < 1 || bitsLen > 99))) return -1;
 
-	if (type == '0' && len > pow(2, bitsLen)) return -90;
+	if (type == '0' && len > pow(2, bitsLen)) return -1;
 
 	if (type == '0') return packrat_write_zero(pathPri, pathPrd, data, len, bitsPos, bitsLen);
 	if (type == 'C') return packrat_write_compact(pathPri, pathPrd, data, len, bitsPos);
@@ -525,7 +540,7 @@ int packrat_write(const char * const pathPri, const char * const pathPrd, const 
 }
 
 int packrat_create(const char * const pathPri, const char * const pathPrd, const int bitsPos, const int bitsLen, const char type) {
-	if (bitsPos < 1 || bitsPos > 99 || (type == '0' && (bitsLen < 1 || bitsLen > 99))) return -1;
+	if (pathPri == NULL || pathPrd == NULL || bitsPos < 1 || bitsPos > 99 || (type == '0' && (bitsLen < 1 || bitsLen > 99))) return -1;
 
 	const int prd = open(pathPrd, O_WRONLY | O_CREAT | O_EXCL, 0644);
 	if (prd < 0) return -2;
@@ -550,7 +565,7 @@ int packrat_create(const char * const pathPri, const char * const pathPrd, const
 }
 
 static int packrat_update_zero(const char * const pathPri, const char * const pathPrd, const int id, const char * const data, const off_t len, const int bitsPos, const int bitsLen) {
-	if (bitsPos < 1 || bitsPos > 99 || bitsLen < 1 || bitsLen > 99) return -1;
+	if (pathPri == NULL || pathPrd == NULL || id < 0 || data == NULL || len < 1 || bitsPos < 1 || bitsPos > 99 || bitsLen < 1 || bitsLen > 99) return -1;
 
 	const int pri = open(pathPri, O_RDWR);
 	if (pri < 0) return -2;
