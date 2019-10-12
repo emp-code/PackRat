@@ -200,7 +200,7 @@ static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen
 
 	// Pack Rat Index: Position and Length
 	char info[infoBytes];
-	int bytesRead = pread(pri, info, infoBytes, 5 + id * infoBytes);
+	ssize_t bytesRead = pread(pri, info, infoBytes, 5 + id * infoBytes);
 	if (bytesRead != infoBytes) {
 		close(pri);
 		return -2;
@@ -222,7 +222,7 @@ static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen
 	bytesRead = pread(prd, *data, len, pos);
 	close(prd);
 
-	if (bytesRead != len) {
+	if (bytesRead != (ssize_t)len) {
 		free(*data);
 		return -5;
 	}
@@ -232,7 +232,7 @@ static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen
 
 static uint64_t getPos(const int pri, const int infoBytes, const int id, const int bitsPos) {
 	char info[infoBytes];
-	const int bytesRead = pread(pri, info, infoBytes, 5 + id * infoBytes);
+	const ssize_t bytesRead = pread(pri, info, infoBytes, 5 + id * infoBytes);
 	return (bytesRead != infoBytes) ? -1 : simpleUint_toInt(info, 0, bitsPos);
 }
 
@@ -274,10 +274,10 @@ static int packrat_read_compact(const int pri, const int bitsPos, const char *pa
 	*data = malloc(len + 1);
 	if (*data == NULL) return -4;
 
-	const int bytesRead = pread(prd, *data, len, pos);
+	const ssize_t bytesRead = pread(prd, *data, len, pos);
 	close(prd);
 
-	if (bytesRead != len) {
+	if (bytesRead != (ssize_t)len) {
 		free(*data);
 		return -5;
 	}
@@ -529,7 +529,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 
 	// Pack Rat Index: Position and Length
 	char info[infoBytes];
-	int bytesRead = pread(pri, info, infoBytes, 5 + id * infoBytes);
+	ssize_t bytesRead = pread(pri, info, infoBytes, 5 + id * infoBytes);
 	if (bytesRead != infoBytes) {
 		flock(pri, LOCK_UN);
 		flock(prd, LOCK_UN);
