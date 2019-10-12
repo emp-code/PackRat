@@ -5,7 +5,7 @@
 #include <sys/file.h>
 #include <stdint.h>
 #include <string.h>
-#include <math.h> // for ceil, floor
+#include <math.h> // for pow
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CLEAR(a,b) ((a) &= ~(1ULL<<(b)))
@@ -77,6 +77,13 @@
 #define INT_2P1 2
 #define INT_2P0 1
 
+#define bytesInBits_DOWN 0
+#define bytesInBits_UP 1
+static int bytesInBits(const int bits, const int dir) {
+	const int modulus = bits % 8;
+	return ((bits - modulus) / 8) + ((dir == bytesInBits_UP && modulus > 0) ? 1 : 0);
+}
+
 // Get bit value, skipping first (skipBits) bits
 static int bitCheck(const char * const source, int skipBits) {
 	int byteBegin = 0;
@@ -96,8 +103,7 @@ static int bitCheck(const char * const source, int skipBits) {
 
 // Store unsigned integer of 1-64 bits in target string
 static void simpleUint_toChar(char * const target, uint64_t source, const int bits) {
-	const int modulus = bits % 8;
-	const int bytes = ((bits - modulus) / 8) + ((modulus > 0) ? 1 : 0);
+	const int bytes = bytesInBits(bits, bytesInBits_UP);
 
 	if (bits < 64) {
 		source &= (UINT64_MAX >> (64 - bits));
@@ -191,7 +197,7 @@ static uint64_t simpleUint_toInt(const char * const c, const int skipBits, const
 static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen, const char * const pathPrd, const int id, char ** const data) {
 	if (pri < 0) return -1;
 
-	const int infoBytes = ceil((bitsPos + bitsLen) / (double)8);
+	const int infoBytes = bytesInBits(bitsPos + bitsLen, bytesInBits_UP);
 
 	// Pack Rat Index: Position and Length
 	char info[infoBytes];
@@ -236,7 +242,7 @@ static int packrat_read_compact(const int pri, const int bitsPos, const char *pa
 	if (pri < 0) return -1;
 
 	const off_t endPri = lseek(pri, 0, SEEK_END);
-	const int infoBytes = ceil(bitsPos / (double)8);
+	const int infoBytes = bytesInBits(bitsPos, bytesInBits_UP);
 
 	uint64_t len;
 	int prd;
@@ -329,7 +335,7 @@ static int packrat_write_compact(const char * const pathPri, const char * const 
 	if (flock(pri, LOCK_EX) != 0) {close(pri); close(prd); return -4;}
 	if (flock(prd, LOCK_EX) != 0) {close(pri); close(prd); return -5;}
 
-	const int infoBytes = ceil(bitsPos / (double)8);
+	const int infoBytes = bytesInBits(bitsPos, bytesInBits_UP);
 
 	const int id = (lseek(pri, 0, SEEK_END) - 5) / infoBytes; // Ignore first five bytes (the file header)
 
@@ -397,9 +403,9 @@ static int packrat_write_zero(const char * const pathPri, const char * const pat
 	if (flock(pri, LOCK_EX) != 0) {close(pri); close(prd); return -4;}
 	if (flock(prd, LOCK_EX) != 0) {close(pri); close(prd); return -5;}
 
-	const int infoBytes = ceil((bitsPos + bitsLen) / (double)8);
-	const int posBytes = ceil(bitsPos / (double)8);
-	const int lenBytes = ceil(bitsLen / (double)8);
+	const int infoBytes = bytesInBits(bitsPos + bitsLen, bytesInBits_UP);
+	const int posBytes = bytesInBits(bitsPos, bytesInBits_UP);
+	const int lenBytes = bytesInBits(bitsLen, bytesInBits_UP);
 
 	const int id = (lseek(pri, 0, SEEK_END) - 5) / infoBytes; // Ignore first five bytes (the file header)
 
@@ -415,7 +421,7 @@ static int packrat_write_zero(const char * const pathPri, const char * const pat
 	char cpr_pos[posBytes]; simpleUint_toChar(cpr_pos, pos, bitsPos);
 	char cpr_len[lenBytes]; simpleUint_toChar(cpr_len, len, bitsLen);
 
-	const int skipBytes = floor(bitsPos / (double)8);
+	const int skipBytes = bytesInBits(bitsPos, bytesInBits_DOWN);
 	const int skipBits = bitsPos % 8;
 
 	char cpr_full[infoBytes];
@@ -450,7 +456,7 @@ static char packrat_write_getBits(const char * const pathPri, int * const bitsPo
 	*bitsPos = header[3];
 	*bitsLen = header[4];
 
-	const int infoBytes = (type == 'C') ? ceil(*bitsPos / (double)8) : ceil((*bitsPos + *bitsLen) / (double)8);
+	const int infoBytes = (type == 'C') ? bytesInBits(*bitsPos, bytesInBits_UP) : bytesInBits(*bitsPos + *bitsLen, bytesInBits_UP);
 
 	const int totalSize = lseek(pri, 0, SEEK_END) - 5;
 	if (totalSize % infoBytes != 0) {
@@ -516,9 +522,9 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 	if (flock(pri, LOCK_EX) != 0) {close(pri); close(prd); return -4;}
 	if (flock(prd, LOCK_EX) != 0) {flock(pri, LOCK_UN); close(pri); close(prd); return -5;}
 
-	const int infoBytes = ceil((bitsPos + bitsLen) / (double)8);
-	const int posBytes = ceil(bitsPos / (double)8);
-	const int lenBytes = ceil(bitsLen / (double)8);
+	const int infoBytes = bytesInBits(bitsPos + bitsLen, bytesInBits_UP);
+	const int posBytes = bytesInBits(bitsPos, bytesInBits_UP);
+	const int lenBytes = bytesInBits(bitsLen, bytesInBits_UP);
 
 	// Pack Rat Index: Position and Length
 	char info[infoBytes];
@@ -560,7 +566,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		simpleUint_toChar(cpr_pos, oldPos, bitsPos);
 		simpleUint_toChar(cpr_len, len, bitsLen);
 
-		const int skipBytes = floor(bitsPos / (double)8);
+		const int skipBytes = bytesInBits(bitsPos, bytesInBits_DOWN);
 		const int skipBits = bitsPos % 8;
 
 		char cpr_full[infoBytes];
@@ -591,7 +597,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		simpleUint_toChar(cpr_pos, newPos, bitsPos);
 		simpleUint_toChar(cpr_len, len, bitsLen);
 
-		const int skipBytes = floor(bitsPos / (double)8);
+		const int skipBytes = bytesInBits(bitsPos, bytesInBits_DOWN);
 		const int skipBits = bitsPos % 8;
 
 		char cpr_full[infoBytes];
