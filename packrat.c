@@ -317,9 +317,8 @@ static off_t packrat_addFile(const int prd, const size_t len, const char * const
 	const off_t pos = lseek(prd, 0, SEEK_END);
 	if (pos < 0) return pos;
 
-	write(prd, data, len);
-
-	return pos;
+	ssize_t bytesWritten = write(prd, data, len);
+	return (bytesWritten == (ssize_t)len) ? pos : -1;
 }
 
 // Write: Pack Rat Compact (PRC)
