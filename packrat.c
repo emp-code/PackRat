@@ -5,7 +5,6 @@
 #include <sys/file.h>
 #include <stdint.h>
 #include <string.h>
-#include <math.h> // for pow
 
 #define BIT_SET(a,b) ((a) |= (1ULL<<(b)))
 #define BIT_CLEAR(a,b) ((a) &= ~(1ULL<<(b)))
@@ -480,7 +479,7 @@ int packrat_write(const char * const pathPri, const char * const pathPrd, const 
 	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
 	if (bitsPos < 1 || bitsPos > 99 || (type == '0' && (bitsLen < 1 || bitsLen > 99))) return -1;
 
-	if (type == '0' && len > pow(2, bitsLen)) return -1;
+	if (type == '0' && len > (UINT64_MAX >> (64 - bitsLen))) return -1;
 
 	if (type == '0') return packrat_write_zero(pathPri, pathPrd, data, len, bitsPos, bitsLen);
 	if (type == 'C') return packrat_write_compact(pathPri, pathPrd, data, len, bitsPos);
@@ -628,7 +627,7 @@ int packrat_update(const char * const pathPri, const char * const pathPrd, const
 	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
 	if (bitsPos < 1 || bitsPos > 99 || bitsLen < 1 || bitsLen > 99) return -1;
 
-	if (type == '0' && len > pow(2, bitsLen)) return -90;
+	if (type == '0' && len > (UINT64_MAX >> (64 - bitsLen))) return -90;
 
 // TODO check if requested ID is too high
 
