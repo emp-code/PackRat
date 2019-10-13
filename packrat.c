@@ -346,13 +346,10 @@ static int packrat_write_zero(const char * const pathPri, const char * const pat
 	char cpr_pos[posBytes]; pruint_store(cpr_pos, pos, bitsPos);
 	char cpr_len[lenBytes]; pruint_store(cpr_len, len, bitsLen);
 
-	const int skipBytes = bytesInBits(bitsPos, bytesInBits_DOWN);
-	const int skipBits = bitsPos % 8;
-
 	char cpr_full[infoBytes];
 	bzero(cpr_full, infoBytes);
 	bitcpy(cpr_full, cpr_pos, 0, 0, bitsPos);
-	bitcpy(cpr_full + skipBytes, cpr_len, skipBits, 0, bitsLen);
+	bitcpy(cpr_full, cpr_len, bitsPos, 0, bitsLen);
 
 	const int ret = write(pri, cpr_full, infoBytes);
 
@@ -467,13 +464,10 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		pruint_store(cpr_pos, oldPos, bitsPos);
 		pruint_store(cpr_len, len, bitsLen);
 
-		const int skipBytes = bytesInBits(bitsPos, bytesInBits_DOWN);
-		const int skipBits = bitsPos % 8;
-
 		char cpr_full[infoBytes];
 		bzero(cpr_full, infoBytes);
 		bitcpy(cpr_full, cpr_pos, 0, 0, bitsPos);
-		bitcpy(cpr_full + skipBytes, cpr_len, skipBits, 0, bitsLen);
+		bitcpy(cpr_full, cpr_len, bitsPos, 0, bitsLen);
 
 		bytesWritten = pwrite(pri, cpr_full, infoBytes, 5 + id * infoBytes);
 
@@ -499,13 +493,10 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		pruint_store(cpr_pos, newPos, bitsPos);
 		pruint_store(cpr_len, len, bitsLen);
 
-		const int skipBytes = bytesInBits(bitsPos, bytesInBits_DOWN);
-		const int skipBits = bitsPos % 8;
-
 		char cpr_full[infoBytes];
 		bzero(cpr_full, infoBytes);
 		bitcpy(cpr_full, cpr_pos, 0, 0, bitsPos);
-		bitcpy(cpr_full + skipBytes, cpr_len, skipBits, 0, bitsLen);
+		bitcpy(cpr_full, cpr_len, bitsPos, 0, bitsLen);
 
 		bytesWritten = pwrite(pri, cpr_full, infoBytes, 5 + id * infoBytes);
 
