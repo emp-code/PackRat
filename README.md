@@ -80,7 +80,7 @@ Index (.pri) Format
 
 The first five bytes of the .pri (Pack Rat Index) file contain the archive header. The five bytes are:
 1. 'P' (file signature)
-2. 'R' (file signature)
+2. 'r' (file signature)
 3. '0' or 'C'  (archive type)
 4. Number of bits to use for position
 5. Number of bits to use for size (not used for Compact)
