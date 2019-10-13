@@ -552,17 +552,3 @@ int packrat_create(const char * const pathPri, const char * const pathPrd, const
 	close(pri);
 	return (bytesWritten == 5) ? 0 : -1;
 }
-
-/*
-	const int bits = 34;
-
-	uint64_t x = 314141;
-	char c[8];
-	bzero(c, 8);
-	pruint_store(c, x, bits);
-
-	uint64_t y = pruint_fetch(c, 0, bits);
-	if (x != y) printf("%lu\n", x);
-
-	return 0;
-*/
