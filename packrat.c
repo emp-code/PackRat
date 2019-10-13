@@ -19,6 +19,7 @@ static const uint64_t pow2[] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192
 
 #define bytesInBits_DOWN 0
 #define bytesInBits_UP 1
+__attribute__((warn_unused_result, const))
 static int bytesInBits(const int bits, const int dir) {
 	const int modulus = bits % 8;
 	return ((bits - modulus) / 8) + ((dir == bytesInBits_UP && modulus > 0) ? 1 : 0);
