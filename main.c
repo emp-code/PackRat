@@ -201,10 +201,6 @@ int main(int argc, char *argv[]) {
 				return 1;
 			} else {
 				lenData = readFile(path, &data);
-				if (lenData < 1) {
-					if (data != NULL) free(data);
-					return 1;
-				}
 			}
 
 			const int ret = packrat_write(pri, prd, data, lenData);

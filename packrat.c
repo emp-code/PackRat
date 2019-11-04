@@ -363,6 +363,27 @@ static int packrat_write_zero(const char * const pathPri, const char * const pat
 	return -1;
 }
 
+// Append placeholder entry to a Pack Rat Zero archive
+static int packrat_write_zero_placeholder(const char * const pathPri, const int bitsPos, const int bitsLen) {
+	const int pri = open(pathPri, O_WRONLY | O_APPEND);
+	if (pri < 0) return -1;
+
+	if (flock(pri, LOCK_EX) != 0) {close(pri); return -1;}
+
+	const int infoBytes = bytesInBits(bitsPos + bitsLen, bytesInBits_UP);
+
+	const int id = (lseek(pri, 0, SEEK_END) - 5) / infoBytes; // Ignore first five bytes (the file header)
+
+	char zeroes[infoBytes];
+	bzero(zeroes, infoBytes);
+	const int ret = write(pri, zeroes, infoBytes);
+
+	flock(pri, LOCK_UN);
+	close(pri);
+
+	return (ret == infoBytes) ? id : -1;
+}
+
 static char packrat_write_getBits(const char * const pathPri, int * const bitsPos, int * const bitsLen) {
 	const int pri = open(pathPri, O_RDONLY);
 	if (pri == -1) return 0;
@@ -393,15 +414,18 @@ static char packrat_write_getBits(const char * const pathPri, int * const bitsPo
 }
 
 int packrat_write(const char * const pathPri, const char * const pathPrd, const char * const data, const off_t len) {
-	if (pathPri == NULL || pathPrd == NULL || data == NULL || len < 1) return -1;
+	if (pathPri == NULL) return -1;
 
 	int bitsPos;
 	int bitsLen;
 
 	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
 	if (bitsPos < 1 || bitsPos > 99 || (type == '0' && (bitsLen < 1 || bitsLen > 99))) return -1;
-
 	if (type == '0' && (uint64_t)len > (UINT64_MAX >> (64 - bitsLen))) return -1;
+
+	if (type == '0' && len == 0) return packrat_write_zero_placeholder(pathPri, bitsPos, bitsLen);
+
+	if (pathPrd == NULL || data == NULL || len < 1) return -1;
 
 	if (type == '0') return packrat_write_zero(pathPri, pathPrd, data, len, bitsPos, bitsLen);
 	if (type == 'C') return packrat_write_compact(pathPri, pathPrd, data, len, bitsPos);
