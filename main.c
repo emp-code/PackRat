@@ -181,7 +181,15 @@ int main(int argc, char *argv[]) {
 			const int lenFile = packrat_read(pri, prd, fileNum, &buf);
 
 			if (lenFile < 1) {
-				return 1;
+				switch (lenFile) {
+					case PACKRAT_ERROR_MISC: puts("Error: Miscellaneous error"); break;
+					case PACKRAT_ERROR_ALLOC: puts("Error: Allocating memory failed (out of memory?)"); break;
+					case PACKRAT_ERROR_FILESIG: puts("Error: File signature does not match (not a Pack Rat archive?)"); break;
+					case PACKRAT_ERROR_OPEN: puts("Error: Failed to open file"); break;
+					case PACKRAT_ERROR_READ: puts("Error: Failed to read file"); break;
+					case PACKRAT_ERROR_EMPTY: puts("Error: The requested file is empty"); break;
+				}
+				return EXIT_FAILURE;
 			}
 
 			if (strcmp(path, "-") == 0)
