@@ -9,6 +9,7 @@
 #define PACKRAT_ERROR_OPEN -20
 #define PACKRAT_ERROR_READ -21
 #define PACKRAT_ERROR_EMPTY -30
+#define PACKRAT_ERROR_ID -40
 
 int packrat_create(const char * const pathPri, const char * const pathPrd, const uint8_t bitsPos, const uint8_t bitsLen, const char type);
 int packrat_read(const char * const pathPri, const char * const pathPrd, const int id, char ** const data);

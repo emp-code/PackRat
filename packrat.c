@@ -225,6 +225,15 @@ static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen
 	const int prd = open(pathPrd, O_RDONLY);
 	if (prd == -1) return PACKRAT_ERROR_OPEN;
 
+	const off_t prdSize = lseek(prd, 0, SEEK_END);
+	if (prdSize < 1) {
+		close(prd);
+		return PACKRAT_ERROR_READ;
+	} else if (pos + len > (unsigned long)prdSize) {
+		close(prd);
+		return PACKRAT_ERROR_ID;
+	}
+
 	*data = malloc(len + 1);
 	if (*data == NULL) return PACKRAT_ERROR_ALLOC;
 
