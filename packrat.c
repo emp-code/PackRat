@@ -163,7 +163,9 @@ static int packrat_read_compact(const int pri, const int bitsPos, const char *pa
 	int prd;
 
 	const uint64_t pos = getPos(pri, infoBytes, id, bitsPos);
-	if (pos == UINT64_MAX) return PACKRAT_ERROR_MISC;
+
+	if (pos == UINT64_MAX) {close(pri); return PACKRAT_ERROR_MISC;}
+	if (data == NULL) {close(pri); return PACKRAT_ERROR_NODATA;}
 
 	// Pack Rat Data: File contents
 	if ((5 + (id + 1) * infoBytes) >= endPri) {
@@ -220,6 +222,7 @@ static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen
 	close(pri);
 
 	if (len == 0) return PACKRAT_ERROR_EMPTY;
+	if (data == NULL) return PACKRAT_ERROR_NODATA;
 
 	// Pack Rat Data: File contents
 	const int prd = open(pathPrd, O_RDONLY);
@@ -251,7 +254,7 @@ static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen
 // Read: Main function - chooses format automatically.
 // Returns length of file on success, or a negative error code on failure
 int packrat_read(const char * const pathPri, const char * const pathPrd, const int id, char ** const data) {
-	if (pathPri == NULL || pathPrd == NULL || id < 0 || data == NULL) return -1;
+	if (pathPri == NULL || pathPrd == NULL || id < 0) return -1;
 
 	const int pri = open(pathPri, O_RDONLY);
 	if (pri == -1) return PACKRAT_ERROR_OPEN;
