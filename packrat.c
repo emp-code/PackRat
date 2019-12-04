@@ -453,14 +453,14 @@ int packrat_write(const char * const pathPri, const char * const pathPrd, const 
 
 static int packrat_update_zero(const char * const pathPri, const char * const pathPrd, const int id, const char * const data, const off_t len, const int bitsPos, const int bitsLen) {
 	const int pri = open(pathPri, O_RDWR);
-	if (pri < 0) return -1;
+	if (pri < 0) return PACKRAT_ERROR_OPEN;
 
 	const int prd = open(pathPrd, O_WRONLY);
-	if (prd < 0) {close(pri); return -1;}
+	if (prd < 0) {close(pri); return PACKRAT_ERROR_OPEN;}
 
 	// Lock both files
-	if (flock(pri, LOCK_EX) != 0) {close(pri); close(prd); return -1;}
-	if (flock(prd, LOCK_EX) != 0) {flock(pri, LOCK_UN); close(pri); close(prd); return -1;}
+	if (flock(pri, LOCK_EX) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
+	if (flock(prd, LOCK_EX) != 0) {flock(pri, LOCK_UN); close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
 
 	const int infoBytes = bytesInBits(bitsPos + bitsLen, bytesInBits_UP);
 	const int posBytes = bytesInBits(bitsPos, bytesInBits_UP);
@@ -474,7 +474,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		flock(prd, LOCK_UN);
 		close(pri);
 		close(prd);
-		return -1;
+		return PACKRAT_ERROR_READWRITE;
 	}
 
 	const uint64_t oldPos = pruint_fetch(info, 0,       bitsPos);
@@ -488,7 +488,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		close(pri);
 		close(prd);
 
-		if (bytesWritten != len) return -1;
+		if (bytesWritten != len) return PACKRAT_ERROR_READWRITE;
 	} else if ((uint64_t)len < oldLen) {
 		ssize_t bytesWritten = pwrite(prd, data, len, oldPos);
 
@@ -498,7 +498,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		if (bytesWritten != len) {
 			flock(pri, LOCK_UN);
 			close(pri);
-			return -1;
+			return PACKRAT_ERROR_READWRITE;
 		}
 
 		char cpr_pos[posBytes];
@@ -516,7 +516,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		flock(pri, LOCK_UN);
 		close(pri);
 
-		if (bytesWritten != infoBytes) return -1;
+		if (bytesWritten != infoBytes) return PACKRAT_ERROR_READWRITE;
 	} else /* len > oldLen */{
 		const off_t newPos = lseek(prd, 0, SEEK_END);
 		ssize_t bytesWritten = write(prd, data, len);
@@ -527,7 +527,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		if (bytesWritten != len) {
 			flock(pri, LOCK_UN);
 			close(pri);
-			return -1;
+			return PACKRAT_ERROR_READWRITE;
 		}
 
 		char cpr_pos[posBytes];
@@ -545,7 +545,7 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 		flock(pri, LOCK_UN);
 		close(pri);
 
-		if (bytesWritten != infoBytes) return -1;
+		if (bytesWritten != infoBytes) return PACKRAT_ERROR_READWRITE;
 	}
 
 	return 0;
@@ -558,9 +558,9 @@ int packrat_update(const char * const pathPri, const char * const pathPrd, const
 	int bitsLen;
 
 	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
-	if (bitsPos < 1 || bitsPos > 99 || bitsLen < 1 || bitsLen > 99) return -1;
+	if ((type != '0' && type != 'C') || bitsPos < 1 || bitsPos > 99 || (type == '0' && (bitsLen < 1 || bitsLen > 99))) return PACKRAT_ERROR_INDEX;
 
-	if (type == '0' && (uint64_t)len > (UINT64_MAX >> (64 - bitsLen))) return -90;
+	if (type == '0' && (uint64_t)len > (UINT64_MAX >> (64 - bitsLen))) return PACKRAT_ERROR_TOOBIG;
 
 // TODO check if requested ID is too high
 
