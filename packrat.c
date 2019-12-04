@@ -208,10 +208,16 @@ static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen
 	if (pri < 0) return PACKRAT_ERROR_MISC;
 
 	const int infoBytes = bytesInBits(bitsPos + bitsLen, bytesInBits_UP);
+	const int readPos = 5 + (id * infoBytes);
+
+	// Pack Rat Index: Error checking
+	const off_t priSize = lseek(pri, 0, SEEK_END);
+	if (priSize < 6) return PACKRAT_ERROR_CORRUPT;
+	if (readPos + infoBytes > priSize) return PACKRAT_ERROR_ID;
 
 	// Pack Rat Index: Position and Length
 	char info[infoBytes];
-	ssize_t bytesRead = pread(pri, info, infoBytes, 5 + id * infoBytes);
+	ssize_t bytesRead = pread(pri, info, infoBytes, readPos);
 	if (bytesRead != infoBytes) {
 		close(pri);
 		return PACKRAT_ERROR_READ;
@@ -234,7 +240,7 @@ static int packrat_read_zero(const int pri, const int bitsPos, const int bitsLen
 		return PACKRAT_ERROR_READ;
 	} else if (pos + len > (unsigned long)prdSize) {
 		close(prd);
-		return PACKRAT_ERROR_ID;
+		return PACKRAT_ERROR_CORRUPT;
 	}
 
 	*data = malloc(len + 1);
