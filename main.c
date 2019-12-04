@@ -185,10 +185,13 @@ int main(int argc, char *argv[]) {
 					case PACKRAT_ERROR_MISC: puts("Error: Miscellaneous error"); break;
 					case PACKRAT_ERROR_ALLOC: puts("Error: Allocating memory failed (out of memory?)"); break;
 					case PACKRAT_ERROR_FILESIG: puts("Error: File signature does not match (not a Pack Rat archive?)"); break;
+					case PACKRAT_ERROR_CORRUPT: puts("Error: Index file corrupted"); break;
 					case PACKRAT_ERROR_OPEN: puts("Error: Failed to open file"); break;
-					case PACKRAT_ERROR_READ: puts("Error: Failed to read file"); break;
+					case PACKRAT_ERROR_READWRITE: puts("Error: Failed to read file"); break;
 					case PACKRAT_ERROR_EMPTY: puts("Error: The requested file is empty"); break;
+					case PACKRAT_ERROR_ID: puts("Error: The requested file does not exist"); break;
 				}
+
 				return EXIT_FAILURE;
 			}
 
@@ -213,7 +216,16 @@ int main(int argc, char *argv[]) {
 
 			const int ret = packrat_write(pri, prd, data, lenData);
 			if (ret < 0) {
-				printf("%d\n", ret);
+				switch (ret) {
+					case PACKRAT_ERROR_MISC: puts("Error: Miscellaneous error"); break;
+					case PACKRAT_ERROR_INDEX: puts("Error: Bad index file"); break;
+					case PACKRAT_ERROR_OPEN: puts("Error: Failed to open file"); break;
+					case PACKRAT_ERROR_LOCK: puts("Error: Failed to lock file"); break;
+					case PACKRAT_ERROR_TOOBIG: puts("Error: Requested file is too large"); break;
+					case PACKRAT_ERROR_READWRITE: puts("Error: Failed to read or write file"); break;
+				}
+
+				return EXIT_FAILURE;
 			}
 
 			free(data);
