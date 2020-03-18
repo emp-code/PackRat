@@ -1,32 +1,24 @@
-Introduction
-====
+# Pack Rat Archival System #
 
 Pack Rat is an archival format designed for permanent storage of large numbers of small files.
 
-The original usecase is storing hundreds of millions of small images relating to database entries.
-
-The design priorities are, in rough order: compactness, simplicity and speed.
+It's designed for maximum compactness with a simple design, without risking data integrity or compromising performance.
 
 A Pack Rat archive consists of two files:
 * .prd (Pack Rat Data), which stores the contents of the files, one after another.
 * .pri (Pack Rat Index), which stores the locations where files start and end.
 
-Stored files are referenced by ID numbers in the order they were added, starting from zero. No filenames or metadata are stored.
-
-No seeking is done. Only bytes relating to the requested file are read.
-
-No compression is done, the files are stored as they are.
+Stored files are referenced by ID numbers in the order they were added, starting from zero. Data is stored without compression or other modification. No filenames or metadata are stored.
 
 The format is designed as append-only. Small changes may be possible, but major changes require recreating the archive.
 
-Archive Types & Settings
-====
+## Archive types, settings ##
 
 Two archive types exist: Zero (0) and Compact (C).
 
-Zero is universal and full-featured. It's fairly well tested and is under active use.
+Zero is the full-featured format, getting its name from its ability to store 0-size (placeholder) entries which can later be replaced.
 
-Compact lacks some features and is poorly tested, but is even more compact than Zero, and also supports files of any size.
+Compact lacks some features, but is more space-efficient.
 
 Zero requires two settings:
 * PosBits (position bits): determines the maximum archive (.prd) size.
@@ -36,7 +28,7 @@ The limits can be calculated simply: 2 ^ [number of bits] = [maximum size in byt
 
 Compact only uses the PosBits setting. It has no limit on individual file size.
 
-Example settings:
+Example settings (Zero-type):
 * PosBits=40, which limits the .prd file to a maximum of 1 TiB.
 * LenBits=16, which limits individual files to a maximum of 64 KiB.
 
@@ -46,8 +38,7 @@ Smaller numbers mean less space taken per entry, while larger numbers have the a
 
 The number of bits should add up to a number divisible by 8, to avoid wasting bits.
 
-Usage Examples
-====
+## Usage ##
 
 Create a new Pack Rat Zero archive under the files 'example.prd' and 'example.pri', using 40 bits for the position and 16 bits for the length:
 
@@ -65,8 +56,7 @@ Replace file number 25 with 'test.jpg' in 'example.prd' and 'example.pri' (see U
 
 `packrat --update --data=example.prd --index=example.pri --num=25 --file=test.jpg`
 
-Updating Data
-====
+## Updating data ##
 
 Pack Rat Zero supports updating (replacing) files, with the following limitations:
 * If the replacement data is larger: the old data will remain, but cannot be accessed through Pack Rat
@@ -75,8 +65,7 @@ Pack Rat Zero supports updating (replacing) files, with the following limitation
 
 Recreating the entire archive can be done to bypass these limitations.
 
-Index (.pri) Format
-====
+## Index (.pri) format ##
 
 The first five bytes of the .pri (Pack Rat Index) file contain the archive header. The five bytes are:
 1. 'P' (file signature)
