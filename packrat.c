@@ -54,77 +54,77 @@ void bitcpy(char * const target, const char * const source, const int targetBegi
 
 static void pruint_store(char * const target, uint64_t source, const int bitCount) {
 	switch (bitCount) { // no breaks
-		case 64: if (source >= pow2[63]) {target[7] |= 1 << 0; source -= pow2[63];} else target[7] &= (UINT8_MAX ^ 1 << 0);
-		case 63: if (source >= pow2[62]) {target[7] |= 1 << 1; source -= pow2[62];} else target[7] &= (UINT8_MAX ^ 1 << 1);
-		case 62: if (source >= pow2[61]) {target[7] |= 1 << 2; source -= pow2[61];} else target[7] &= (UINT8_MAX ^ 1 << 2);
-		case 61: if (source >= pow2[60]) {target[7] |= 1 << 3; source -= pow2[60];} else target[7] &= (UINT8_MAX ^ 1 << 3);
-		case 60: if (source >= pow2[59]) {target[7] |= 1 << 4; source -= pow2[59];} else target[7] &= (UINT8_MAX ^ 1 << 4);
-		case 59: if (source >= pow2[58]) {target[7] |= 1 << 5; source -= pow2[58];} else target[7] &= (UINT8_MAX ^ 1 << 5);
-		case 58: if (source >= pow2[57]) {target[7] |= 1 << 6; source -= pow2[57];} else target[7] &= (UINT8_MAX ^ 1 << 6);
-		case 57: if (source >= pow2[56]) {target[7] |= 1 << 7; source -= pow2[56];} else target[7] &= (UINT8_MAX ^ 1 << 7);
+		case 64: if (source >= pow2[63]) {target[7] |= 1 << 0; source -= pow2[63];} else target[7] &= ~(1 << 0);
+		case 63: if (source >= pow2[62]) {target[7] |= 1 << 1; source -= pow2[62];} else target[7] &= ~(1 << 1);
+		case 62: if (source >= pow2[61]) {target[7] |= 1 << 2; source -= pow2[61];} else target[7] &= ~(1 << 2);
+		case 61: if (source >= pow2[60]) {target[7] |= 1 << 3; source -= pow2[60];} else target[7] &= ~(1 << 3);
+		case 60: if (source >= pow2[59]) {target[7] |= 1 << 4; source -= pow2[59];} else target[7] &= ~(1 << 4);
+		case 59: if (source >= pow2[58]) {target[7] |= 1 << 5; source -= pow2[58];} else target[7] &= ~(1 << 5);
+		case 58: if (source >= pow2[57]) {target[7] |= 1 << 6; source -= pow2[57];} else target[7] &= ~(1 << 6);
+		case 57: if (source >= pow2[56]) {target[7] |= 1 << 7; source -= pow2[56];} else target[7] &= ~(1 << 7);
 
-		case 56: if (source >= pow2[55]) {target[6] |= 1 << 0; source -= pow2[55];} else target[6] &= (UINT8_MAX ^ 1 << 0);
-		case 55: if (source >= pow2[54]) {target[6] |= 1 << 1; source -= pow2[54];} else target[6] &= (UINT8_MAX ^ 1 << 1);
-		case 54: if (source >= pow2[53]) {target[6] |= 1 << 2; source -= pow2[53];} else target[6] &= (UINT8_MAX ^ 1 << 2);
-		case 53: if (source >= pow2[52]) {target[6] |= 1 << 3; source -= pow2[52];} else target[6] &= (UINT8_MAX ^ 1 << 3);
-		case 52: if (source >= pow2[51]) {target[6] |= 1 << 4; source -= pow2[51];} else target[6] &= (UINT8_MAX ^ 1 << 4);
-		case 51: if (source >= pow2[50]) {target[6] |= 1 << 5; source -= pow2[50];} else target[6] &= (UINT8_MAX ^ 1 << 5);
-		case 50: if (source >= pow2[49]) {target[6] |= 1 << 6; source -= pow2[49];} else target[6] &= (UINT8_MAX ^ 1 << 6);
-		case 49: if (source >= pow2[48]) {target[6] |= 1 << 7; source -= pow2[48];} else target[6] &= (UINT8_MAX ^ 1 << 7);
+		case 56: if (source >= pow2[55]) {target[6] |= 1 << 0; source -= pow2[55];} else target[6] &= ~(1 << 0);
+		case 55: if (source >= pow2[54]) {target[6] |= 1 << 1; source -= pow2[54];} else target[6] &= ~(1 << 1);
+		case 54: if (source >= pow2[53]) {target[6] |= 1 << 2; source -= pow2[53];} else target[6] &= ~(1 << 2);
+		case 53: if (source >= pow2[52]) {target[6] |= 1 << 3; source -= pow2[52];} else target[6] &= ~(1 << 3);
+		case 52: if (source >= pow2[51]) {target[6] |= 1 << 4; source -= pow2[51];} else target[6] &= ~(1 << 4);
+		case 51: if (source >= pow2[50]) {target[6] |= 1 << 5; source -= pow2[50];} else target[6] &= ~(1 << 5);
+		case 50: if (source >= pow2[49]) {target[6] |= 1 << 6; source -= pow2[49];} else target[6] &= ~(1 << 6);
+		case 49: if (source >= pow2[48]) {target[6] |= 1 << 7; source -= pow2[48];} else target[6] &= ~(1 << 7);
 
-		case 48: if (source >= pow2[47]) {target[5] |= 1 << 0; source -= pow2[47];} else target[5] &= (UINT8_MAX ^ 1 << 0);
-		case 47: if (source >= pow2[46]) {target[5] |= 1 << 1; source -= pow2[46];} else target[5] &= (UINT8_MAX ^ 1 << 1);
-		case 46: if (source >= pow2[45]) {target[5] |= 1 << 2; source -= pow2[45];} else target[5] &= (UINT8_MAX ^ 1 << 2);
-		case 45: if (source >= pow2[44]) {target[5] |= 1 << 3; source -= pow2[44];} else target[5] &= (UINT8_MAX ^ 1 << 3);
-		case 44: if (source >= pow2[43]) {target[5] |= 1 << 4; source -= pow2[43];} else target[5] &= (UINT8_MAX ^ 1 << 4);
-		case 43: if (source >= pow2[42]) {target[5] |= 1 << 5; source -= pow2[42];} else target[5] &= (UINT8_MAX ^ 1 << 5);
-		case 42: if (source >= pow2[41]) {target[5] |= 1 << 6; source -= pow2[41];} else target[5] &= (UINT8_MAX ^ 1 << 6);
-		case 41: if (source >= pow2[40]) {target[5] |= 1 << 7; source -= pow2[40];} else target[5] &= (UINT8_MAX ^ 1 << 7);
+		case 48: if (source >= pow2[47]) {target[5] |= 1 << 0; source -= pow2[47];} else target[5] &= ~(1 << 0);
+		case 47: if (source >= pow2[46]) {target[5] |= 1 << 1; source -= pow2[46];} else target[5] &= ~(1 << 1);
+		case 46: if (source >= pow2[45]) {target[5] |= 1 << 2; source -= pow2[45];} else target[5] &= ~(1 << 2);
+		case 45: if (source >= pow2[44]) {target[5] |= 1 << 3; source -= pow2[44];} else target[5] &= ~(1 << 3);
+		case 44: if (source >= pow2[43]) {target[5] |= 1 << 4; source -= pow2[43];} else target[5] &= ~(1 << 4);
+		case 43: if (source >= pow2[42]) {target[5] |= 1 << 5; source -= pow2[42];} else target[5] &= ~(1 << 5);
+		case 42: if (source >= pow2[41]) {target[5] |= 1 << 6; source -= pow2[41];} else target[5] &= ~(1 << 6);
+		case 41: if (source >= pow2[40]) {target[5] |= 1 << 7; source -= pow2[40];} else target[5] &= ~(1 << 7);
 
-		case 40: if (source >= pow2[39]) {target[4] |= 1 << 0; source -= pow2[39];} else target[4] &= (UINT8_MAX ^ 1 << 0);
-		case 39: if (source >= pow2[38]) {target[4] |= 1 << 1; source -= pow2[38];} else target[4] &= (UINT8_MAX ^ 1 << 1);
-		case 38: if (source >= pow2[37]) {target[4] |= 1 << 2; source -= pow2[37];} else target[4] &= (UINT8_MAX ^ 1 << 2);
-		case 37: if (source >= pow2[36]) {target[4] |= 1 << 3; source -= pow2[36];} else target[4] &= (UINT8_MAX ^ 1 << 3);
-		case 36: if (source >= pow2[35]) {target[4] |= 1 << 4; source -= pow2[35];} else target[4] &= (UINT8_MAX ^ 1 << 4);
-		case 35: if (source >= pow2[34]) {target[4] |= 1 << 5; source -= pow2[34];} else target[4] &= (UINT8_MAX ^ 1 << 5);
-		case 34: if (source >= pow2[33]) {target[4] |= 1 << 6; source -= pow2[33];} else target[4] &= (UINT8_MAX ^ 1 << 6);
-		case 33: if (source >= pow2[32]) {target[4] |= 1 << 7; source -= pow2[32];} else target[4] &= (UINT8_MAX ^ 1 << 7);
+		case 40: if (source >= pow2[39]) {target[4] |= 1 << 0; source -= pow2[39];} else target[4] &= ~(1 << 0);
+		case 39: if (source >= pow2[38]) {target[4] |= 1 << 1; source -= pow2[38];} else target[4] &= ~(1 << 1);
+		case 38: if (source >= pow2[37]) {target[4] |= 1 << 2; source -= pow2[37];} else target[4] &= ~(1 << 2);
+		case 37: if (source >= pow2[36]) {target[4] |= 1 << 3; source -= pow2[36];} else target[4] &= ~(1 << 3);
+		case 36: if (source >= pow2[35]) {target[4] |= 1 << 4; source -= pow2[35];} else target[4] &= ~(1 << 4);
+		case 35: if (source >= pow2[34]) {target[4] |= 1 << 5; source -= pow2[34];} else target[4] &= ~(1 << 5);
+		case 34: if (source >= pow2[33]) {target[4] |= 1 << 6; source -= pow2[33];} else target[4] &= ~(1 << 6);
+		case 33: if (source >= pow2[32]) {target[4] |= 1 << 7; source -= pow2[32];} else target[4] &= ~(1 << 7);
 
-		case 32: if (source >= pow2[31]) {target[3] |= 1 << 0; source -= pow2[31];} else target[3] &= (UINT8_MAX ^ 1 << 0);
-		case 31: if (source >= pow2[30]) {target[3] |= 1 << 1; source -= pow2[30];} else target[3] &= (UINT8_MAX ^ 1 << 1);
-		case 30: if (source >= pow2[29]) {target[3] |= 1 << 2; source -= pow2[29];} else target[3] &= (UINT8_MAX ^ 1 << 2);
-		case 29: if (source >= pow2[28]) {target[3] |= 1 << 3; source -= pow2[28];} else target[3] &= (UINT8_MAX ^ 1 << 3);
-		case 28: if (source >= pow2[27]) {target[3] |= 1 << 4; source -= pow2[27];} else target[3] &= (UINT8_MAX ^ 1 << 4);
-		case 27: if (source >= pow2[26]) {target[3] |= 1 << 5; source -= pow2[26];} else target[3] &= (UINT8_MAX ^ 1 << 5);
-		case 26: if (source >= pow2[25]) {target[3] |= 1 << 6; source -= pow2[25];} else target[3] &= (UINT8_MAX ^ 1 << 6);
-		case 25: if (source >= pow2[24]) {target[3] |= 1 << 7; source -= pow2[24];} else target[3] &= (UINT8_MAX ^ 1 << 7);
+		case 32: if (source >= pow2[31]) {target[3] |= 1 << 0; source -= pow2[31];} else target[3] &= ~(1 << 0);
+		case 31: if (source >= pow2[30]) {target[3] |= 1 << 1; source -= pow2[30];} else target[3] &= ~(1 << 1);
+		case 30: if (source >= pow2[29]) {target[3] |= 1 << 2; source -= pow2[29];} else target[3] &= ~(1 << 2);
+		case 29: if (source >= pow2[28]) {target[3] |= 1 << 3; source -= pow2[28];} else target[3] &= ~(1 << 3);
+		case 28: if (source >= pow2[27]) {target[3] |= 1 << 4; source -= pow2[27];} else target[3] &= ~(1 << 4);
+		case 27: if (source >= pow2[26]) {target[3] |= 1 << 5; source -= pow2[26];} else target[3] &= ~(1 << 5);
+		case 26: if (source >= pow2[25]) {target[3] |= 1 << 6; source -= pow2[25];} else target[3] &= ~(1 << 6);
+		case 25: if (source >= pow2[24]) {target[3] |= 1 << 7; source -= pow2[24];} else target[3] &= ~(1 << 7);
 
-		case 24: if (source >= pow2[23]) {target[2] |= 1 << 0; source -= pow2[23];} else target[2] &= (UINT8_MAX ^ 1 << 0);
-		case 23: if (source >= pow2[22]) {target[2] |= 1 << 1; source -= pow2[22];} else target[2] &= (UINT8_MAX ^ 1 << 1);
-		case 22: if (source >= pow2[21]) {target[2] |= 1 << 2; source -= pow2[21];} else target[2] &= (UINT8_MAX ^ 1 << 2);
-		case 21: if (source >= pow2[20]) {target[2] |= 1 << 3; source -= pow2[20];} else target[2] &= (UINT8_MAX ^ 1 << 3);
-		case 20: if (source >= pow2[19]) {target[2] |= 1 << 4; source -= pow2[19];} else target[2] &= (UINT8_MAX ^ 1 << 4);
-		case 19: if (source >= pow2[18]) {target[2] |= 1 << 5; source -= pow2[18];} else target[2] &= (UINT8_MAX ^ 1 << 5);
-		case 18: if (source >= pow2[17]) {target[2] |= 1 << 6; source -= pow2[17];} else target[2] &= (UINT8_MAX ^ 1 << 6);
-		case 17: if (source >= pow2[16]) {target[2] |= 1 << 7; source -= pow2[16];} else target[2] &= (UINT8_MAX ^ 1 << 7);
+		case 24: if (source >= pow2[23]) {target[2] |= 1 << 0; source -= pow2[23];} else target[2] &= ~(1 << 0);
+		case 23: if (source >= pow2[22]) {target[2] |= 1 << 1; source -= pow2[22];} else target[2] &= ~(1 << 1);
+		case 22: if (source >= pow2[21]) {target[2] |= 1 << 2; source -= pow2[21];} else target[2] &= ~(1 << 2);
+		case 21: if (source >= pow2[20]) {target[2] |= 1 << 3; source -= pow2[20];} else target[2] &= ~(1 << 3);
+		case 20: if (source >= pow2[19]) {target[2] |= 1 << 4; source -= pow2[19];} else target[2] &= ~(1 << 4);
+		case 19: if (source >= pow2[18]) {target[2] |= 1 << 5; source -= pow2[18];} else target[2] &= ~(1 << 5);
+		case 18: if (source >= pow2[17]) {target[2] |= 1 << 6; source -= pow2[17];} else target[2] &= ~(1 << 6);
+		case 17: if (source >= pow2[16]) {target[2] |= 1 << 7; source -= pow2[16];} else target[2] &= ~(1 << 7);
 
-		case 16: if (source >= pow2[15]) {target[1] |= 1 << 0; source -= pow2[15];} else target[1] &= (UINT8_MAX ^ 1 << 0);
-		case 15: if (source >= pow2[14]) {target[1] |= 1 << 1; source -= pow2[14];} else target[1] &= (UINT8_MAX ^ 1 << 1);
-		case 14: if (source >= pow2[13]) {target[1] |= 1 << 2; source -= pow2[13];} else target[1] &= (UINT8_MAX ^ 1 << 2);
-		case 13: if (source >= pow2[12]) {target[1] |= 1 << 3; source -= pow2[12];} else target[1] &= (UINT8_MAX ^ 1 << 3);
-		case 12: if (source >= pow2[11]) {target[1] |= 1 << 4; source -= pow2[11];} else target[1] &= (UINT8_MAX ^ 1 << 4);
-		case 11: if (source >= pow2[10]) {target[1] |= 1 << 5; source -= pow2[10];} else target[1] &= (UINT8_MAX ^ 1 << 5);
-		case 10: if (source >= pow2[9])  {target[1] |= 1 << 6; source -= pow2[9];}  else target[1] &= (UINT8_MAX ^ 1 << 6);
-		case  9: if (source >= pow2[8])  {target[1] |= 1 << 7; source -= pow2[8];}  else target[1] &= (UINT8_MAX ^ 1 << 7);
+		case 16: if (source >= pow2[15]) {target[1] |= 1 << 0; source -= pow2[15];} else target[1] &= ~(1 << 0);
+		case 15: if (source >= pow2[14]) {target[1] |= 1 << 1; source -= pow2[14];} else target[1] &= ~(1 << 1);
+		case 14: if (source >= pow2[13]) {target[1] |= 1 << 2; source -= pow2[13];} else target[1] &= ~(1 << 2);
+		case 13: if (source >= pow2[12]) {target[1] |= 1 << 3; source -= pow2[12];} else target[1] &= ~(1 << 3);
+		case 12: if (source >= pow2[11]) {target[1] |= 1 << 4; source -= pow2[11];} else target[1] &= ~(1 << 4);
+		case 11: if (source >= pow2[10]) {target[1] |= 1 << 5; source -= pow2[10];} else target[1] &= ~(1 << 5);
+		case 10: if (source >= pow2[9])  {target[1] |= 1 << 6; source -= pow2[9];}  else target[1] &= ~(1 << 6);
+		case  9: if (source >= pow2[8])  {target[1] |= 1 << 7; source -= pow2[8];}  else target[1] &= ~(1 << 7);
 
-		case  8: if (source >= pow2[7])  {target[0] |= 1 << 0; source -= pow2[7];}  else target[0] &= (UINT8_MAX ^ 1 << 0);
-		case  7: if (source >= pow2[6])  {target[0] |= 1 << 1; source -= pow2[6];}  else target[0] &= (UINT8_MAX ^ 1 << 1);
-		case  6: if (source >= pow2[5])  {target[0] |= 1 << 2; source -= pow2[5];}  else target[0] &= (UINT8_MAX ^ 1 << 2);
-		case  5: if (source >= pow2[4])  {target[0] |= 1 << 3; source -= pow2[4];}  else target[0] &= (UINT8_MAX ^ 1 << 3);
-		case  4: if (source >= pow2[3])  {target[0] |= 1 << 4; source -= pow2[3];}  else target[0] &= (UINT8_MAX ^ 1 << 4);
-		case  3: if (source >= pow2[2])  {target[0] |= 1 << 5; source -= pow2[2];}  else target[0] &= (UINT8_MAX ^ 1 << 5);
-		case  2: if (source >= pow2[1])  {target[0] |= 1 << 6; source -= pow2[1];}  else target[0] &= (UINT8_MAX ^ 1 << 6);
-		case  1: if (source >= pow2[0])  {target[0] |= 1 << 7; source -= pow2[0];}  else target[0] &= (UINT8_MAX ^ 1 << 7);
+		case  8: if (source >= pow2[7])  {target[0] |= 1 << 0; source -= pow2[7];}  else target[0] &= ~(1 << 0);
+		case  7: if (source >= pow2[6])  {target[0] |= 1 << 1; source -= pow2[6];}  else target[0] &= ~(1 << 1);
+		case  6: if (source >= pow2[5])  {target[0] |= 1 << 2; source -= pow2[5];}  else target[0] &= ~(1 << 2);
+		case  5: if (source >= pow2[4])  {target[0] |= 1 << 3; source -= pow2[4];}  else target[0] &= ~(1 << 3);
+		case  4: if (source >= pow2[3])  {target[0] |= 1 << 4; source -= pow2[3];}  else target[0] &= ~(1 << 4);
+		case  3: if (source >= pow2[2])  {target[0] |= 1 << 5; source -= pow2[2];}  else target[0] &= ~(1 << 5);
+		case  2: if (source >= pow2[1])  {target[0] |= 1 << 6; source -= pow2[1];}  else target[0] &= ~(1 << 6);
+		case  1: if (source >= pow2[0])  {target[0] |= 1 << 7; source -= pow2[0];}  else target[0] &= ~(1 << 7);
 	}
 }
 
