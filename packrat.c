@@ -283,7 +283,7 @@ int packrat_read(const char * const pathPri, const char * const pathPrd, const i
 }
 
 // Append data to the .prd file
-static off_t packrat_addFile(const int prd, const size_t len, const char * const data) {
+static off_t packrat_addFile(const int prd, const off_t len, const char * const data) {
 	if (prd < 0 || len < 1 || data == NULL) return 0;
 
 	const off_t pos = lseek(prd, 0, SEEK_END);
