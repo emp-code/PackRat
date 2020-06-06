@@ -25,7 +25,7 @@ static int bytesInBits(const int bits, const int dir) {
 	return ((bits - modulus) / 8) + ((dir == bytesInBits_UP && modulus > 0) ? 1 : 0);
 }
 
-void bitcpy(char * const target, const char * const source, const int targetBegin, const int sourceBegin, const int bits) {
+static void bitcpy(char * const target, const char * const source, const int targetBegin, const int sourceBegin, const int bits) {
 	int targetBit = targetBegin % 8;
 	int sourceBit = sourceBegin % 8;
 	int targetByte = (targetBegin - targetBit) / 8;
