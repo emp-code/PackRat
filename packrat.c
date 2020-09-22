@@ -560,7 +560,10 @@ int packrat_update(const char * const pathPri, const char * const pathPrd, const
 	const char type = packrat_write_getBits(pathPri, &bitsPos, &bitsLen);
 	if ((type != '0' && type != 'C') || bitsPos < 1 || bitsPos > 99 || (type == '0' && (bitsLen < 1 || bitsLen > 99))) return PACKRAT_ERROR_INDEX;
 
-	if (type == '0' && (uint64_t)len > (UINT64_MAX >> (64 - bitsLen))) return PACKRAT_ERROR_TOOBIG;
+	if (type == '0') {
+		const uint64_t max = UINT64_MAX >> (64 - bitsLen);
+		if ((uint64_t)len > max) return PACKRAT_ERROR_TOOBIG;
+	}
 
 // TODO check if requested ID is too high
 
