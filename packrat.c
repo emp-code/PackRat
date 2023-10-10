@@ -302,8 +302,8 @@ static int packrat_write_compact(const char * const pathPri, const char * const 
 	if (prd < 0) {close(pri); return PACKRAT_ERROR_OPEN;}
 
 	// Lock both files
-	if (flock(pri, LOCK_EX) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
-	if (flock(prd, LOCK_EX) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
+	if (flock(pri, LOCK_EX | LOCK_NB) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
+	if (flock(prd, LOCK_EX | LOCK_NB) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
 
 	const int infoBytes = bytesInBits(bitsPos, bytesInBits_UP);
 
@@ -343,8 +343,8 @@ static int packrat_write_zero(const char * const pathPri, const char * const pat
 	if (prd < 0) {close(pri); return PACKRAT_ERROR_OPEN;}
 
 	// Lock both files
-	if (flock(pri, LOCK_EX) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
-	if (flock(prd, LOCK_EX) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
+	if (flock(pri, LOCK_EX | LOCK_NB) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
+	if (flock(prd, LOCK_EX | LOCK_NB) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
 
 	const int infoBytes = bytesInBits(bitsPos + bitsLen, bytesInBits_UP);
 	const int posBytes = bytesInBits(bitsPos, bytesInBits_UP);
@@ -386,7 +386,7 @@ static int packrat_write_zero_placeholder(const char * const pathPri, const int 
 	const int pri = open(pathPri, O_WRONLY | O_APPEND);
 	if (pri < 0) return PACKRAT_ERROR_OPEN;
 
-	if (flock(pri, LOCK_EX) != 0) {close(pri); return PACKRAT_ERROR_LOCK;}
+	if (flock(pri, LOCK_EX | LOCK_NB) != 0) {close(pri); return PACKRAT_ERROR_LOCK;}
 
 	const int infoBytes = bytesInBits(bitsPos + bitsLen, bytesInBits_UP);
 
@@ -459,8 +459,8 @@ static int packrat_update_zero(const char * const pathPri, const char * const pa
 	if (prd < 0) {close(pri); return PACKRAT_ERROR_OPEN;}
 
 	// Lock both files
-	if (flock(pri, LOCK_EX) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
-	if (flock(prd, LOCK_EX) != 0) {flock(pri, LOCK_UN); close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
+	if (flock(pri, LOCK_EX | LOCK_NB) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
+	if (flock(prd, LOCK_EX | LOCK_NB) != 0) {flock(pri, LOCK_UN); close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
 
 	const int infoBytes = bytesInBits(bitsPos + bitsLen, bytesInBits_UP);
 	const int posBytes = bytesInBits(bitsPos, bytesInBits_UP);
@@ -582,7 +582,7 @@ int packrat_create(const char * const pathPri, const char * const pathPrd, const
 
 	const int pri = open(pathPri, O_WRONLY | O_CREAT | O_EXCL, 0644);
 	if (pri < 0) return -1;
-	if (flock(pri, LOCK_EX) != 0) {close(pri); return -1;}
+	if (flock(pri, LOCK_EX | LOCK_NB) != 0) {close(pri); return -1;}
 
 	char header[5];
 	header[0] = 'P';
