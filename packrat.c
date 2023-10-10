@@ -576,11 +576,11 @@ int packrat_update(const char * const pathPri, const char * const pathPrd, const
 int packrat_create(const char * const pathPri, const char * const pathPrd, const uint8_t bitsPos, const uint8_t bitsLen, const char type) {
 	if (pathPri == NULL || pathPrd == NULL || bitsPos < 1 || bitsPos > 99 || (type == '0' && (bitsLen < 1 || bitsLen > 99)) || (type != '0' && type != 'C')) return -1;
 
-	const int prd = open(pathPrd, O_WRONLY | O_CREAT | O_EXCL, 0644);
+	const int prd = open(pathPrd, O_WRONLY | O_CREAT | O_EXCL, 644);
 	if (prd < 0) return -1;
 	close(prd);
 
-	const int pri = open(pathPri, O_WRONLY | O_CREAT | O_EXCL, 0644);
+	const int pri = open(pathPri, O_WRONLY | O_CREAT | O_EXCL, 644);
 	if (pri < 0) return -1;
 	if (flock(pri, LOCK_EX | LOCK_NB) != 0) {close(pri); return -1;}
 
