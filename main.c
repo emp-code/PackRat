@@ -224,8 +224,8 @@ int main(int argc, char *argv[]) {
 				printError(ret);
 				return EXIT_FAILURE;
 			}
-//			puts("File added to archive successfully.");
 
+			puts("File added to archive successfully.");
 			free(data);
 		break;}
 
