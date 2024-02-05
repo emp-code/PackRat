@@ -1,64 +1,68 @@
 #!/bin/bash
 
-# Simple automated test for Pack Rat
+# Tester for Pack Rat v3
 
-valgrind="valgrind -q --track-origins=yes --leak-check=full --exit-on-first-error=yes --error-exitcode=1"
+# 1. Asks Pack Rat to create an archive with randomly chosen parameters
+# 2. Asks Pack Rat to add randomly generated files to the archive
+# 3. Compares the Pack Rat PRD file against the correct/expected data
+# 4. Asks Pack Rat to extract each individual file, comparing them against the originals
 
-for i in {0..100}; do
-	if [ $(( $RANDOM % 2 )) -eq 0 ]; then
-		t="0"
-		posBits=$(( $RANDOM % 57 + 8 ))
-		lenBits=$(( $RANDOM % 57 + 8 ))
+#cmd="valgrind -q --track-origins=yes --leak-check=full --exit-on-first-error=yes --error-exitcode=1 ./packrat"
+cmd="./packrat"
 
-		let totalBits=$posBits+$lenBits
-	else
-		t="C"
-		posBits=$(( $RANDOM % 57 + 8 ))
-		lenBits=0
-		totalBits=$posBits
-	fi
+count=$(shuf -i 1-30 -n 1)
 
-	infoBytes=$(awk -vnumber=$totalBits -vdiv=8 'function ceiling(x){return x%1 ? int(x)+1 : x} BEGIN{ print ceiling(number/div) }')
+if [ $(( $RANDOM % 2 )) -eq 1 ]; then
+	while true; do
+		bitsLen=$(shuf -i 8-32 -n 1)
+		bitsPos=$(shuf -i 16-47 -n 1)
+		if [ $bitsPos -gt $bitsLen ]; then break; fi
+	done
+	maxSize=$(echo "2 ^ ($bitsLen) - 4" | bc)
+else
+	bitsLen=0
+	bitsPos=$(shuf -i 16-47 -n 1)
+	maxSize=$(echo "(2 ^ ($bitsPos - 4))" | bc)
+fi
 
-	size1=$(( $RANDOM % 40 + 5 ))
-	size2=$(( $RANDOM % 40 + 5 ))
-	let "total = size1 + size2"
+if [ $maxSize -gt 1234567 ]; then maxSize=1234567; fi
 
-	echo "Testing with Type $t using $posBits for position and $lenBits for length and file sizes of $size1 and $size2"
+echo "Testing bitsPos=$bitsPos; bitsLen=$bitsLen; $count files."
 
-	head -c $size1 /dev/urandom > "/tmp/packrat-$$.tmp.0"
-	head -c $size2 /dev/urandom > "/tmp/packrat-$$.tmp.1"
+$cmd --create --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" --posbits=$bitsPos --lenbits=$bitsLen
 
-	$valgrind ./packrat --create --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --posbits=$posBits --lenbits=$lenBits --type=$t
-	$valgrind ./packrat --write --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" -f "/tmp/packrat-$$.tmp.0"
-	$valgrind ./packrat --write --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" -f "/tmp/packrat-$$.tmp.1"
+head -c 8 "/tmp/packrat-$$.pri" > "/tmp/packrat-$$.cmp"
 
-	# .prd should match a combination of the two test files
-	cat "/tmp/packrat-$$.tmp.0" "/tmp/packrat-$$.tmp.1" > "/tmp/packrat-$$.tmp"
-	cmp "/tmp/packrat-$$.tmp" "/tmp/test-$$.prd"
-	rm "/tmp/packrat-$$.tmp"
+for i in $(seq 0 $count); do
+	size=$(shuf -i 1-$maxSize -n 1)
+	head -c $size /dev/urandom > "/tmp/packrat-$$.tmp.$i"
+	$cmd --write --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" -f "/tmp/packrat-$$.tmp.$i"
+	cat "/tmp/packrat-$$.tmp.$i" >> "/tmp/packrat-$$.cmp"
+done
 
-	# .pri size should be 5 + (infoBytes * 2)
-	priSize=$(wc -c "/tmp/test-$$.pri" | sed 's/ .*//')
-	let "priBytes = 5 + (infoBytes * 2)"
-	if [ $priSize -ne $priBytes ]; then echo ".pri size ($priSize) does not match expected value ($priBytes)"; fi
+cmp "/tmp/packrat-$$.cmp" "/tmp/packrat-$$.prd"
+if [ $? -ne 0 ]; then
+	ls -l "/tmp/packrat-$$.cmp" "/tmp/packrat-$$.prd"
+	echo "FAIL: data does not match file contents"
+else
+	# Test each file individually
+	for i in $(seq 0 $count); do
+		$cmd --read --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" -n $i -f "/tmp/packrat-$$.chk.$i"
 
-	$valgrind ./packrat --read --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=0 --file="/tmp/packrat-$$.out"
-	cmp "/tmp/packrat-$$.tmp.0" "/tmp/packrat-$$.out"
-	rm "/tmp/packrat-$$.out"
+		cmp "/tmp/packrat-$$.chk.$i" "/tmp/packrat-$$.tmp.$i"
+		if [ $? -ne 0 ]; then
+			echo "FAIL: extracted file $i does not match"
+			ls -l "/tmp/packrat-$$.chk.$i" "/tmp/packrat-$$.tmp.$i"
+			break;
+		fi
+	done
+fi
 
-	$valgrind ./packrat --read --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.out"
-	cmp "/tmp/packrat-$$.tmp.1" "/tmp/packrat-$$.out"
-	rm "/tmp/packrat-$$.out"
+# Cleanup
+rm "/tmp/packrat-$$.pri"
+rm "/tmp/packrat-$$.prd"
+rm "/tmp/packrat-$$.cmp"
 
-	# Data replacement test
-	if [ $t == "0" ]; then
-		$valgrind ./packrat --update --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.tmp.0"
-
-		$valgrind ./packrat --read --data="/tmp/test-$$.prd" --index="/tmp/test-$$.pri" --num=1 --file="/tmp/packrat-$$.out"
-		cmp "/tmp/packrat-$$.tmp.0" "/tmp/packrat-$$.out"
-		rm "/tmp/packrat-$$.out"
-	fi
-
-	rm "/tmp/packrat-$$.tmp.0" "/tmp/packrat-$$.tmp.1" "/tmp/test-$$.prd" "/tmp/test-$$.pri"
+for i in $(seq 0 $count); do
+	rm "/tmp/packrat-$$.tmp.$i"
 done

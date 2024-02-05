@@ -1,18 +1,15 @@
-#define _FILE_OFFSET_BITS 64
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "packrat.h"
 
-
-static int printHelp() {
+static int printHelp(const char * const cmd) {
 	printf("\
-Pack Rat Archival System by EMPcode\n\n\
+Pack Rat archive tool, for Pack Rat v3 archives\n\n\
 Mode:\n\
 -c, --create  Create a new archive\n\
 -h, --help    Show this help\n\
@@ -25,9 +22,8 @@ Global options:\n\
 -i FILE, --index=FILE  Pack Rat Index file to use\n\
 \n\
 Create options:\n\
--l NUM, --lenbits=NUM  Bits to use for length (ignored if Compact type)\n\
+-l NUM, --lenbits=NUM  Bits to use for length (0 for Compact variant)\n\
 -p NUM, --posbits=NUM  Bits to use for position\n\
--t NUM, --type=TYPE    Type of archive to make; '0' for Zero, 'C' for Compact\n\
 \n\
 Read options:\n\
 -f FILE, --file=FILE  Output file path (standard output if omitted)\n\
@@ -42,26 +38,26 @@ Write options:\n\
 \n\
 Examples:\n\n\
 Create a new Pack Rat Zero archive under the files 'example.prd' and 'example.pri', using 40 bits for the position and 24 bits for the length\n\
-packrat --create --data=example.prd --index=example.pri --posbits=40 --lenbits=24 --type=0\n\
-packrat -c -d example.prd -i example.pri -p 40 -l 24 -t 0\n\
+%s --create --data=example.prd --index=example.pri --posbits=40 --lenbits=24\n\
+%s -c -d example.prd -i example.pri -p 40 -l 24\n\
 \n\
 Write the file 'test.jpg' to 'example.prd' and 'example.pri'\n\
-packrat --write --data=example.prd --index=example.pri --file=test.jpg\n\
-packrat -w -d example.prd -i example.pri -f test.jpg\n\
+%s --write --data=example.prd --index=example.pri --file=test.jpg\n\
+%s -w -d example.prd -i example.pri -f test.jpg\n\
 \n\
 Read file number 42 from 'example.prd' and 'example.pri', writing to 'test.jpg'\n\
-packrat --read --data=example.prd --index=example.pri --num=42 --file=test.jpg\n\
-packrat -r -d example.prd -i example.pri -n 42 -f test.jpg\n\
+%s --read --data=example.prd --index=example.pri --num=42 --file=test.jpg\n\
+%s -r -d example.prd -i example.pri -n 42 -f test.jpg\n\
 \n\
 Replace file number 25 with 'test.jpg' in 'example.prd' and 'example.pri'\n\
-packrat --update --data=example.prd --index=example.pri --num=25 --file=test.jpg\n\
-packrat -u -d example.prd -i example.pri -n 25 -f test.jpg\n\
-");
+%s --update --data=example.prd --index=example.pri --num=25 --file=test.jpg\n\
+%s -u -d example.prd -i example.pri -n 25 -f test.jpg\n\
+", cmd, cmd, cmd, cmd, cmd, cmd, cmd, cmd);
 
 	return 0;
 }
 
-static int readFile(const char * const path, char ** const data) {
+static int readFile(const char * const path, unsigned char ** const data) {
 	const int fd = open(path, O_RDONLY);
 	if (fd < 0) return -1;
 
@@ -76,11 +72,11 @@ static int readFile(const char * const path, char ** const data) {
 	return (ret == lenData) ? lenData : -2;
 }
 
-static int writeFile(const char * const path, const char * const data, const size_t lenData) {
-	const int fd = open(path, O_WRONLY | O_CREAT, 0644);
+static int writeFile(const char * const path, const unsigned char * const data, const size_t lenData) {
+	const int fd = open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
 	if (fd < 0) return -1;
 
-	write(fd, data, lenData);
+	if (write(fd, data, lenData) != (ssize_t)lenData) puts("Failed writing output file");
 
 	close(fd);
 	return 0;
@@ -107,27 +103,35 @@ static char *getArgStr(char * const argv[], const int n, const char * const long
 	}
 }
 
-static char getArgChar(char * const argv[], const int n, const char * const longname, int * const i) {
-	if (n == 1) { // short form
-		(*i)++;
-		if (argv[*i][1] != 0x00) return 0x00;
-		return argv[*i][0];
-	} else { // long form
-		const size_t l = strlen(longname);
-		if (strncmp(argv[*i], longname, l) != 0) return 0x00;
-		return argv[*i][l];
+static void printError(const int e) {
+	switch (e) {
+		// General
+		case PACKRAT_ERROR_ALLOC: puts("Error: Allocation error"); break;
+		case PACKRAT_ERROR_PARAM: puts("Error: Incorrect parameters"); break;
+
+		// Data
+		case PACKRAT_ERROR_FORMAT: puts("Error: Invalid archive format"); break;
+		case PACKRAT_ERROR_HEADER: puts("Error: Invalid archive header"); break;
+		case PACKRAT_ERROR_MISMATCH: puts("Error: The PRD/PRI headers do not match"); break;
+		case PACKRAT_ERROR_TOOBIG: puts("Error: Requested file is too large"); break;
+
+		// I/O
+		case PACKRAT_ERROR_LOCK: puts("Error: Failed to lock file"); break;
+		case PACKRAT_ERROR_OPEN: puts("Error: Failed to open file"); break;
+		case PACKRAT_ERROR_READ_PRD: puts("Error: Failed to read the PRD file"); break;
+		case PACKRAT_ERROR_READ_PRI: puts("Error: Failed to read the PRI file"); break;
+		case PACKRAT_ERROR_WRITE: puts("Error: Failed to write file"); break;
 	}
 }
 
 int main(int argc, char *argv[]) {
-	if (argc < 2) return printHelp();
+	if (argc < 2) return printHelp(argv[0]);
 
 	char mode = 0;
-	char type = 0;
 
 	char *prd = NULL;
 	char *pri = NULL;
-	char *path = "-";
+	const char *path = "-";
 
 	int bitsPos = -1;
 	int bitsLen = -1;
@@ -151,13 +155,11 @@ int main(int argc, char *argv[]) {
 			case 'i': pri  = getArgStr(argv, n, "--index=", &i); break;
 			case 'f': path = getArgStr(argv, n, "--file=",  &i); break;
 
-			case 't': type = getArgChar(argv, n, "--type=", &i); break;
-
 			case 'n': fileNum = getArgInt(argv, n, "--num=",     &i); break;
 			case 'p': bitsPos = getArgInt(argv, n, "--posbits=", &i); break;
 			case 'l': bitsLen = getArgInt(argv, n, "--lenbits=", &i); break;
 
-			case 'h': return printHelp();
+			case 'h': return printHelp(argv[0]);
 
 			default:
 				printf("Invalid option '%s'. Use -h for help.\n", argv[i]);
@@ -165,74 +167,44 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	switch(mode) {
+	switch (mode) {
 		case 'c': { // Create
-			if (prd == NULL || pri == NULL || type == 0 || bitsPos < 1 || (type == '0' && bitsLen < 0)) {
+			if (prd == NULL || pri == NULL || bitsPos < 1) {
 				puts("Invalid options. Use -h for help.");
 				return 0;
 			}
 
-			if (type != 'C' && type != '0') {printf("Invalid type '%c'\n", type); return 1;}
-			packrat_create(pri, prd, bitsPos, bitsLen, type);
+			const int ret = packrat_create(pri, prd, bitsPos, bitsLen);
+			if (ret != 0)
+				printError(ret);
+			else
+				puts("Created OK");
 		break;}
 
 		case 'r': { // Read
-			char *buf;
+			if (fileNum == -1) {
+				puts("Please specify the file number");
+				break;
+			}
+
+			unsigned char *buf;
 			const int lenFile = packrat_read(pri, prd, fileNum, &buf);
 
 			if (lenFile < 1) {
-				switch (lenFile) {
-					case PACKRAT_ERROR_MISC: puts("Error: Miscellaneous error"); break;
-					case PACKRAT_ERROR_ALLOC: puts("Error: Allocating memory failed (out of memory?)"); break;
-					case PACKRAT_ERROR_FILESIG: puts("Error: File signature does not match (not a Pack Rat archive?)"); break;
-					case PACKRAT_ERROR_CORRUPT: puts("Error: Index file corrupted"); break;
-					case PACKRAT_ERROR_OPEN: puts("Error: Failed to open file"); break;
-					case PACKRAT_ERROR_READWRITE: puts("Error: Failed to read file"); break;
-					case PACKRAT_ERROR_EMPTY: puts("Error: The requested file is empty"); break;
-					case PACKRAT_ERROR_ID: puts("Error: The requested file does not exist"); break;
-				}
-
+				printError(lenFile);
 				return EXIT_FAILURE;
 			}
 
 			if (strcmp(path, "-") == 0)
 				printf("%s\n", buf);
 			else
-				writeFile(path, buf, lenFile);
+				writeFile(path, buf, (size_t)lenFile);
 
 			free(buf);
 		break;}
 
 		case 'w': { // Write
-			char *data = NULL;
-			int lenData;
-
-			if (strcmp(path, "-") == 0) {
-				puts("TODO: stdin");
-				return 1;
-			} else {
-				lenData = readFile(path, &data);
-			}
-
-			const int ret = packrat_write(pri, prd, data, lenData);
-			if (ret < 0) {
-				switch (ret) {
-					case PACKRAT_ERROR_MISC: puts("Error: Miscellaneous error"); break;
-					case PACKRAT_ERROR_INDEX: puts("Error: Bad index file"); break;
-					case PACKRAT_ERROR_OPEN: puts("Error: Failed to open file"); break;
-					case PACKRAT_ERROR_LOCK: puts("Error: Failed to lock file"); break;
-					case PACKRAT_ERROR_TOOBIG: puts("Error: Requested file is too large"); break;
-					case PACKRAT_ERROR_READWRITE: puts("Error: Failed to read or write file"); break;
-				}
-
-				return EXIT_FAILURE;
-			}
-
-			free(data);
-		break;}
-
-		case 'u': { // Update (replace)
-			char *data = NULL;
+			unsigned char *data = NULL;
 			int lenData;
 
 			if (strcmp(path, "-") == 0) {
@@ -241,12 +213,39 @@ int main(int argc, char *argv[]) {
 			} else {
 				lenData = readFile(path, &data);
 				if (lenData < 1) {
+					puts("Failed reading input file");
 					if (data != NULL) free(data);
 					return 1;
 				}
 			}
 
-			const int ret = packrat_update(pri, prd, fileNum, data, lenData);
+			const int ret = packrat_write(pri, prd, data, lenData);
+			if (ret < 0) {
+				printError(ret);
+				return EXIT_FAILURE;
+			}
+//			puts("File added to archive successfully.");
+
+			free(data);
+		break;}
+
+		case 'u': { // Update (replace)
+			unsigned char *data = NULL;
+			int lenData;
+
+			if (strcmp(path, "-") == 0) {
+				puts("TODO: stdin");
+				return 1;
+			} else {
+				lenData = readFile(path, &data);
+				if (lenData < 1) {
+					puts("Failed reading input file");
+					if (data != NULL) free(data);
+					return 1;
+				}
+			}
+
+			const int ret = 0;//packrat_update(pri, prd, fileNum, data, lenData);
 			if (ret < 0) {
 				printf("%d\n", ret);
 			}
