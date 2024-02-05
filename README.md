@@ -27,12 +27,12 @@ The Zero format additionally requires the bitsLen parameter. This determines the
 Each archive consists of two files: a small index file (.pri) and the data-holding file (.prd).
 
 Both files begin with an 8-byte header:
-	* The file signature, consisting of the letters 'PR'
-	* A 32-bit individual archive identifier, helping ascertain two files belong to the same set
-	* A 5-bit unsigned integer: bitsPos - how many bits to use for the position value (0-31, interpreted as 16-47)
-	* A 5-bit unsigned integer: bitsLen - how many bits to use for the length value (0 for Compact; 1-31 for Zero, interpreted as 2-32)
-	* A 5-bit currently unused field
-	* A 1-bit field indicating whether to allow existing files to be modified (0: forbid, 1: allow; not currently implemented)
+- The file signature, consisting of the letters 'PR'
+- A 32-bit individual archive identifier, helping ascertain two files belong to the same set
+- A 5-bit unsigned integer: bitsPos - how many bits to use for the position value (0-31, interpreted as 16-47)
+- A 5-bit unsigned integer: bitsLen - how many bits to use for the length value (0 for Compact; 1-31 for Zero, interpreted as 2-32)
+- A 5-bit currently unused field
+- A 1-bit field indicating whether to allow existing files to be modified (0: forbid, 1: allow; not currently implemented)
 
 The index file records the position of each file. In the Zero variant, the size of each file is also recorded.
 
