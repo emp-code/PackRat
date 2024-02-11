@@ -64,5 +64,5 @@ rm "/tmp/packrat-$$.prd"
 rm "/tmp/packrat-$$.cmp"
 
 for i in $(seq 0 $count); do
-	rm "/tmp/packrat-$$.tmp.$i"
+	rm "/tmp/packrat-$$.chk.$i" "/tmp/packrat-$$.tmp.$i"
 done
