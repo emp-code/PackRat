@@ -40,8 +40,7 @@ for i in $(seq 0 $count); do
 	cat "/tmp/packrat-$$.tmp.$i" >> "/tmp/packrat-$$.cmp"
 done
 
-cmp "/tmp/packrat-$$.cmp" "/tmp/packrat-$$.prd"
-if [ $? -ne 0 ]; then
+if ! cmp "/tmp/packrat-$$.cmp" "/tmp/packrat-$$.prd"; then
 	ls -l "/tmp/packrat-$$.cmp" "/tmp/packrat-$$.prd"
 	echo "FAIL: data does not match file contents"
 else
@@ -49,8 +48,7 @@ else
 	for i in $(seq 0 $count); do
 		$cmd --read --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" -n $i -f "/tmp/packrat-$$.chk.$i"
 
-		cmp "/tmp/packrat-$$.chk.$i" "/tmp/packrat-$$.tmp.$i"
-		if [ $? -ne 0 ]; then
+		if ! cmp "/tmp/packrat-$$.chk.$i" "/tmp/packrat-$$.tmp.$i"; then
 			echo "FAIL: extracted file $i does not match"
 			ls -l "/tmp/packrat-$$.chk.$i" "/tmp/packrat-$$.tmp.$i"
 			break;
