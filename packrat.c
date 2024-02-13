@@ -272,7 +272,7 @@ int packrat_create(const char * const pathPri, const char * const pathPrd, const
 
 	bool ok = false;
 	if (write(pri, header.chr, PACKRAT_HEADER_LEN) == PACKRAT_HEADER_LEN) {
-		header.fields.id ^= 1; // PRD: id & 1 == 0
+		header.fields.id--; // PRD: id & 1 == 0
 
 		if (write(prd, header.chr, PACKRAT_HEADER_LEN) == PACKRAT_HEADER_LEN) {
 			ok = true;
