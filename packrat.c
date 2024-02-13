@@ -29,13 +29,13 @@ static int div_ceil(const int a, const int b) {
 }
 
 // pruint: Pack Rat Unsigned Integer: 1-48 bits, little endian bit and byte order
-static void appendPruint(unsigned char * const target, const int bitsTarget, const unsigned char * const new, const int bitsNew) {
+static void appendPruint(unsigned char * const target, const int bitsTarget, const uint64_t new, const int bitsNew) {
 	for (int i = 0; i < bitsNew; i++) {
 		const int t = bitsTarget + i;
 		const int tRemainder = t % 8;
 		const int iRemainder = i % 8;
 
-		if (new[(i - iRemainder) / 8] & (1 << iRemainder)) target[(t - tRemainder) / 8] |= 1 << (7 - tRemainder);
+		if (*((const unsigned char * const)&new + (i - iRemainder) / 8) & (1 << iRemainder)) target[(t - tRemainder) / 8] |= 1 << (7 - tRemainder);
 	}
 }
 
@@ -177,9 +177,9 @@ static int pr_write_zero(const int pri, const int prd, int bitsLen, int bitsPos,
 
 	// Zero variant stores the length and position of each file
 	const uint64_t raw1 = lenData;
-	appendPruint(tbw, usedBits, (const unsigned char * const)&raw1, bitsLen);
+	appendPruint(tbw, usedBits, raw1, bitsLen);
 	const uint64_t raw2 = prdSize - sizeof(struct packrat_header);
-	appendPruint(tbw, usedBits + bitsLen, (const unsigned char * const)&raw2, bitsPos);
+	appendPruint(tbw, usedBits + bitsLen, raw2, bitsPos);
 
 	if (pwrite(pri, (unsigned char*)&tbw, lenTbw, (usedBits > 0) ? priSize - 1 : priSize) != lenTbw) return PACKRAT_ERROR_WRITE;
 	if (write(prd, data, lenData) != (ssize_t)lenData) return PACKRAT_ERROR_WRITE;
@@ -208,7 +208,7 @@ static int pr_write_compact(const int pri, const int prd, int bitsPos, const uns
 
 	// Compact variant stores the position (starting byte) of each file
 	const uint64_t raw = prdSize - sizeof(struct packrat_header);
-	appendPruint(tbw, usedBits, (const unsigned char * const)&raw, bitsPos);
+	appendPruint(tbw, usedBits, raw, bitsPos);
 
 	if (pwrite(pri, (unsigned char*)&tbw, lenTbw, (usedBits > 0) ? priSize - 1 : priSize) != lenTbw) return PACKRAT_ERROR_WRITE;
 	if (write(prd, data, lenData) != (ssize_t)lenData) return PACKRAT_ERROR_WRITE;
