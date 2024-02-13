@@ -35,7 +35,7 @@ else
 	$cmd -c -d "/tmp/packrat-$$.prd" -i "/tmp/packrat-$$.pri" -p $bitsPos -l $bitsLen
 fi
 
-head -c 8 "/tmp/packrat-$$.pri" > "/tmp/packrat-$$.cmp"
+head -c 8 "/tmp/packrat-$$.prd" > "/tmp/packrat-$$.cmp"
 
 for i in $(seq 0 $count); do
 	size=$(shuf -i 1-$maxSize -n 1)
