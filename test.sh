@@ -18,11 +18,11 @@ if [ $(( $RANDOM % 2 )) -eq 1 ]; then
 		bitsPos=$(shuf -i 16-47 -n 1)
 		if [ $bitsPos -gt $bitsLen ]; then break; fi
 	done
-	maxSize=$(echo "2 ^ ($bitsLen) - 4" | bc)
+	maxSize=$(echo "2 ^ ($bitsLen - 4)" | bc)
 else
 	bitsLen=0
 	bitsPos=$(shuf -i 16-47 -n 1)
-	maxSize=$(echo "(2 ^ ($bitsPos - 4))" | bc)
+	maxSize=$(echo "2 ^ ($bitsPos - 4)" | bc)
 fi
 
 if [ $maxSize -gt 1234567 ]; then maxSize=1234567; fi
