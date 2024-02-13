@@ -128,8 +128,7 @@ int main(int argc, char *argv[]) {
 			{0, 0, 0, 0}
 		};
 
-      int optIndex = 0;
-		const int c = getopt_long(argc, argv, "hcagd:i:f:n:l:p:", longOpts, &optIndex);
+		const int c = getopt_long(argc, argv, "hcagd:i:f:n:l:p:", longOpts, NULL);
 		if (c == -1) break;
 
 		switch (c) {
