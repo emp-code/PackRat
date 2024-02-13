@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,48 +12,40 @@ static int printHelp(const char * const cmd) {
 	printf("\
 Pack Rat archive tool, for Pack Rat v3 archives\n\n\
 Mode:\n\
--c, --create  Create a new archive\n\
 -h, --help    Show this help\n\
--r, --read    Read a file from an archive\n\
--u, --update  Update (replace) a file in an archive\n\
--w, --write   Write a file to an archive\n\
+-c, --create  Create a new archive\n\
+-a, --add     Add a file to the archive\n\
+-g, --get     Get a file from the archive\n\
 \n\
 Global options:\n\
--d FILE, --data=FILE   Pack Rat Data file to use\n\
--i FILE, --index=FILE  Pack Rat Index file to use\n\
+-d FILE, --data=FILE   Data file (.prd) of the archive\n\
+-i FILE, --index=FILE  Index file (.pri) of the archive\n\
 \n\
-Create options:\n\
+Create-mode options:\n\
 -l NUM, --lenbits=NUM  Bits to use for length (0 for Compact variant)\n\
 -p NUM, --posbits=NUM  Bits to use for position\n\
 \n\
-Read options:\n\
--f FILE, --file=FILE  Output file path (standard output if omitted)\n\
--n NUM, --num=NUM     File number to read (starts from zero)\n\
+Add-mode options:\n\
+-f FILE, --file=FILE  Input file path (standard input if omitted, or '-')\n\
 \n\
-Update options:\n\
--f FILE, --file=FILE  Input file path (standard input if omitted)\n\
--n NUM, --num=NUM     File number to update (starts from zero)\n\
-\n\
-Write options:\n\
--f FILE, --file=FILE  Input file path (standard input if omitted)\n\
+Get-mode options:\n\
+-f FILE, --file=FILE  Output file path (standard output if omitted, or '-')\n\
+-n NUM,  --num=NUM    File number to extract (starts from zero)\n\
 \n\
 Examples:\n\n\
-Create a new Pack Rat Zero archive under the files 'example.prd' and 'example.pri', using 40 bits for the position and 24 bits for the length\n\
+Create a new Pack Rat Zero archive with the paths 'example.prd' and 'example.pri', using 40 bits for the position and 24 bits for the length\n\
 %s --create --data=example.prd --index=example.pri --posbits=40 --lenbits=24\n\
 %s -c -d example.prd -i example.pri -p 40 -l 24\n\
 \n\
-Write the file 'test.jpg' to 'example.prd' and 'example.pri'\n\
-%s --write --data=example.prd --index=example.pri --file=test.jpg\n\
-%s -w -d example.prd -i example.pri -f test.jpg\n\
+Add the file 'test.jpg' to the archive 'example.prd' and 'example.pri'\n\
+%s --add --data=example.prd --index=example.pri --file=test.jpg\n\
+%s -a -d example.prd -i example.pri -f test.jpg\n\
 \n\
-Read file number 42 from 'example.prd' and 'example.pri', writing to 'test.jpg'\n\
-%s --read --data=example.prd --index=example.pri --num=42 --file=test.jpg\n\
-%s -r -d example.prd -i example.pri -n 42 -f test.jpg\n\
+Get file number 42 from 'example.prd' and 'example.pri' and write it to 'test.jpg'\n\
+%s --get --data=example.prd --index=example.pri --num=42 --file=test.jpg\n\
+%s -g -d example.prd -i example.pri -n 42 -f test.jpg\n\
 \n\
-Replace file number 25 with 'test.jpg' in 'example.prd' and 'example.pri'\n\
-%s --update --data=example.prd --index=example.pri --num=25 --file=test.jpg\n\
-%s -u -d example.prd -i example.pri -n 25 -f test.jpg\n\
-", cmd, cmd, cmd, cmd, cmd, cmd, cmd, cmd);
+", cmd, cmd, cmd, cmd, cmd, cmd);
 
 	return 0;
 }
@@ -73,34 +66,17 @@ static int readFile(const char * const path, unsigned char ** const data) {
 }
 
 static int writeFile(const char * const path, const unsigned char * const data, const size_t lenData) {
+	if (strcmp(path, "-") == 0) {
+		return (write(STDOUT_FILENO, data, lenData) == (ssize_t)lenData) ? 0 : -1;
+	}
+
 	const int fd = open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
 	if (fd < 0) return -1;
 
-	if (write(fd, data, lenData) != (ssize_t)lenData) puts("Failed writing output file");
+	const ssize_t r = write(fd, data, lenData);
 
 	close(fd);
-	return 0;
-}
-
-static int getArgInt(char * const argv[], const int n, const char * const longname, int * const i) {
-	if (n == 1) { // short form
-		(*i)++;
-		return strtol(argv[*i], NULL, 10);
-	} else { // long form
-		const size_t l = strlen(longname);
-		return (strncmp(argv[*i], longname, l) == 0) ? strtol(argv[*i] + l, NULL, 10) : -1;
-	}
-}
-
-static char *getArgStr(char * const argv[], const int n, const char * const longname, int * const i) {
-	if (n == 1) { // short form
-		(*i)++;
-		return argv[*i];
-	} else { // long form
-		const size_t l = strlen(longname);
-		if (strncmp(argv[*i], longname, l) != 0) return NULL;
-		return argv[*i] + l;
-	}
+	return (r == (ssize_t)lenData) ? 0 : -1;
 }
 
 static void printError(const int e) {
@@ -127,53 +103,54 @@ static void printError(const int e) {
 int main(int argc, char *argv[]) {
 	if (argc < 2) return printHelp(argv[0]);
 
-	char mode = 0;
+	int mode = 0;
 
 	char *prd = NULL;
 	char *pri = NULL;
 	const char *path = "-";
 
+	int fileNum = -1;
 	int bitsPos = -1;
 	int bitsLen = -1;
-	int fileNum = -1;
 
-	for (int i = 1; i < argc; i++) {
-		if (argv[i][0] != '-') {
-			printf("Invalid option '%s'. Use -h for help.\n", argv[i]);
-			return 1;
-		}
+	for(;;) {
+		static struct option longOpts[] = {
+			{"help",    no_argument,       NULL, 'h'},
+			{"create",  no_argument,       NULL, 'c'},
+			{"add",     no_argument,       NULL, 'a'},
+			{"get",     no_argument,       NULL, 'g'},
+			{"data",    required_argument, NULL, 'd'},
+			{"index",   required_argument, NULL, 'i'},
+			{"file",    required_argument, NULL, 'f'},
+			{"num",     required_argument, NULL, 'n'},
+			{"lenbits", required_argument, NULL, 'l'},
+			{"posbits", required_argument, NULL, 'p'},
+			{0, 0, 0, 0}
+		};
 
-		const int n = (argv[i][1] == '-') ? 2 : 1;
+      int optIndex = 0;
+		const int c = getopt_long(argc, argv, "hcagd:i:f:n:l:p:", longOpts, &optIndex);
+		if (c == -1) break;
 
-		switch(argv[i][n]) {
-			case 'c': if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--create") == 0) {mode = 'c';} break;
-			case 'r': if (strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--read")   == 0) {mode = 'r';} break;
-			case 'w': if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--write")  == 0) {mode = 'w';} break;
-			case 'u': if (strcmp(argv[i], "-u") == 0 || strcmp(argv[i], "--update") == 0) {mode = 'u';} break;
+		switch (c) {
+			case 'c': mode = 'c'; break;
+			case 'a': mode = 'a'; break;
+			case 'g': mode = 'g'; break;
 
-			case 'd': prd  = getArgStr(argv, n, "--data=",  &i); break;
-			case 'i': pri  = getArgStr(argv, n, "--index=", &i); break;
-			case 'f': path = getArgStr(argv, n, "--file=",  &i); break;
+			case 'd': prd = optarg; break;
+			case 'i': pri = optarg; break;
+			case 'f': path = optarg; break;
 
-			case 'n': fileNum = getArgInt(argv, n, "--num=",     &i); break;
-			case 'p': bitsPos = getArgInt(argv, n, "--posbits=", &i); break;
-			case 'l': bitsLen = getArgInt(argv, n, "--lenbits=", &i); break;
+			case 'n': fileNum = strtol(optarg, NULL, 10); break;
+			case 'p': bitsPos = strtol(optarg, NULL, 10); break;
+			case 'l': bitsLen = strtol(optarg, NULL, 10); break;
 
-			case 'h': return printHelp(argv[0]);
-
-			default:
-				printf("Invalid option '%s'. Use -h for help.\n", argv[i]);
-				return 1;
+			default: return printHelp(argv[0]);
 		}
 	}
 
 	switch (mode) {
 		case 'c': { // Create
-			if (prd == NULL || pri == NULL || bitsPos < 1) {
-				puts("Invalid options. Use -h for help.");
-				return 0;
-			}
-
 			const int ret = packrat_create(pri, prd, bitsPos, bitsLen);
 			if (ret != 0)
 				printError(ret);
@@ -181,29 +158,7 @@ int main(int argc, char *argv[]) {
 				puts("Created OK");
 		break;}
 
-		case 'r': { // Read
-			if (fileNum == -1) {
-				puts("Please specify the file number");
-				break;
-			}
-
-			unsigned char *buf;
-			const int lenFile = packrat_read(pri, prd, fileNum, &buf);
-
-			if (lenFile < 1) {
-				printError(lenFile);
-				return EXIT_FAILURE;
-			}
-
-			if (strcmp(path, "-") == 0)
-				printf("%s\n", buf);
-			else
-				writeFile(path, buf, (size_t)lenFile);
-
-			free(buf);
-		break;}
-
-		case 'w': { // Write
+		case 'a': { // Add
 			unsigned char *data = NULL;
 			int lenData;
 
@@ -219,38 +174,33 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
-			const int ret = packrat_write(pri, prd, data, lenData);
+			const int ret = packrat_add(pri, prd, data, lenData);
 			if (ret < 0) {
 				printError(ret);
 				return EXIT_FAILURE;
 			}
 
 			puts("File added to archive successfully.");
+
 			free(data);
 		break;}
 
-		case 'u': { // Update (replace)
-			unsigned char *data = NULL;
-			int lenData;
-
-			if (strcmp(path, "-") == 0) {
-				puts("TODO: stdin");
-				return 1;
-			} else {
-				lenData = readFile(path, &data);
-				if (lenData < 1) {
-					puts("Failed reading input file");
-					if (data != NULL) free(data);
-					return 1;
-				}
+		case 'g': { // Get
+			if (fileNum == -1) {
+				puts("Please specify the file number");
+				break;
 			}
 
-			const int ret = 0;//packrat_update(pri, prd, fileNum, data, lenData);
-			if (ret < 0) {
-				printf("%d\n", ret);
+			unsigned char *buf;
+			const int lenFile = packrat_get(pri, prd, fileNum, &buf);
+
+			if (lenFile < 1) {
+				printError(lenFile);
+				return EXIT_FAILURE;
 			}
 
-			free(data);
+			writeFile(path, buf, (size_t)lenFile);
+			free(buf);
 		break;}
 	}
 

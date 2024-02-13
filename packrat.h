@@ -23,8 +23,7 @@ enum packrat_status {
 };
 
 int packrat_create(const char * const pathPri, const char * const pathPrd, const int bitsPos, const int bitsLen); // bitsPos=0 for Compact
-int packrat_write(const char * const pathPri, const char * const pathPrd, const unsigned char * const data, const int lenData);
-int packrat_read(const char * const pathPri, const char * const pathPrd, const unsigned long fileNum, unsigned char ** const data);
-//int packrat_replace(const char * const pathPri, const char * const pathPrd, const int id, const char * const data, const off_t len);
+int packrat_add(const char * const pathPri, const char * const pathPrd, const unsigned char * const data, const int lenData);
+int packrat_get(const char * const pathPri, const char * const pathPrd, const unsigned long fileNum, unsigned char ** const data);
 
 #endif

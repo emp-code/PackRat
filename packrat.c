@@ -65,7 +65,7 @@ static bool headersMatch(const struct packrat_header * const h1, const int fd) {
 	return (memcmp(h1, h2, sizeof(struct packrat_header)) == 0) ? true : false;
 }
 
-static int pr_read_zero(const int pri, const int prd, const unsigned long fileNum, const int bitsLen, const int bitsPos, unsigned char ** const data) {
+static int pr_get_zero(const int pri, const int prd, const unsigned long fileNum, const int bitsLen, const int bitsPos, unsigned char ** const data) {
 	const int64_t priPos = sizeof(struct packrat_header) + div_floor((bitsLen + bitsPos) * fileNum, 8); // Byte number to start reading from
 	const long skipBits = ((bitsLen + bitsPos) * fileNum) % 8; // Number of irrelevant bits in the first byte, to be skipped
 	const long priBytes = div_ceil(skipBits + bitsLen + bitsPos, 8);
@@ -92,7 +92,7 @@ static int pr_read_zero(const int pri, const int prd, const unsigned long fileNu
 	return readLen;
 }
 
-static int pr_read_compact(const int pri, const int prd, const unsigned long fileNum, const int bitsPos, unsigned char ** const data) {
+static int pr_get_compact(const int pri, const int prd, const unsigned long fileNum, const int bitsPos, unsigned char ** const data) {
 	const int64_t priPos = sizeof(struct packrat_header) + div_floor(bitsPos * fileNum, 8); // Byte number to start reading from
 	const long skipBits = (bitsPos * fileNum) % 8; // Number of irrelevant bits in the first byte, to be skipped
 	const long priBytes = div_ceil(skipBits + (bitsPos * 2), 8);
@@ -131,7 +131,7 @@ static int pr_read_compact(const int pri, const int prd, const unsigned long fil
 	return readLen;
 }
 
-int packrat_read(const char * const pathPri, const char * const pathPrd, const unsigned long fileNum, unsigned char ** const data) {
+int packrat_get(const char * const pathPri, const char * const pathPrd, const unsigned long fileNum, unsigned char ** const data) {
 	if (pathPri == NULL || pathPrd == NULL || data == NULL) return -1;
 
 	const int pri = open(pathPri, O_RDONLY | O_NOCTTY);
@@ -146,7 +146,7 @@ int packrat_read(const char * const pathPri, const char * const pathPrd, const u
 	if (read(pri, (unsigned char*)&header, sizeof(struct packrat_header)) != sizeof(struct packrat_header)) {close(prd); close(pri); return PACKRAT_ERROR_READ_PRI;}
 	if (!headersMatch(&header, prd)) return PACKRAT_ERROR_MISMATCH;
 
-	const int ret = (header.bitsLen == 0) ? pr_read_compact(pri, prd, fileNum, header.bitsPos + PACKRAT_OFFSET_BITSPOS, data) : pr_read_zero(pri, prd, fileNum, header.bitsLen + PACKRAT_OFFSET_BITSLEN, header.bitsPos + PACKRAT_OFFSET_BITSPOS, data);
+	const int ret = (header.bitsLen == 0) ? pr_get_compact(pri, prd, fileNum, header.bitsPos + PACKRAT_OFFSET_BITSPOS, data) : pr_get_zero(pri, prd, fileNum, header.bitsLen + PACKRAT_OFFSET_BITSLEN, header.bitsPos + PACKRAT_OFFSET_BITSPOS, data);
 
 	flock(pri, LOCK_UN);
 	close(pri);
@@ -156,7 +156,7 @@ int packrat_read(const char * const pathPri, const char * const pathPrd, const u
 	return ret;
 }
 
-static int pr_write_zero(const int pri, const int prd, int bitsLen, int bitsPos, const unsigned char * const data, const int lenData) {
+static int pr_add_zero(const int pri, const int prd, int bitsLen, int bitsPos, const unsigned char * const data, const int lenData) {
 	if (lenData >= (1L << bitsLen)) return PACKRAT_ERROR_TOOBIG;
 
 	const off_t prdSize = lseek(prd, 0, SEEK_END);
@@ -187,7 +187,7 @@ static int pr_write_zero(const int pri, const int prd, int bitsLen, int bitsPos,
 	return PACKRAT_OK;
 }
 
-static int pr_write_compact(const int pri, const int prd, int bitsPos, const unsigned char * const data, const int lenData) {
+static int pr_add_compact(const int pri, const int prd, int bitsPos, const unsigned char * const data, const int lenData) {
 	if (bitsPos > 47) return PACKRAT_ERROR_HEADER;
 
 	const off_t prdSize = lseek(prd, 0, SEEK_END);
@@ -216,7 +216,7 @@ static int pr_write_compact(const int pri, const int prd, int bitsPos, const uns
 	return PACKRAT_OK;
 }
 
-int packrat_write(const char * const pathPri, const char * const pathPrd, const unsigned char * const data, const int lenData) {
+int packrat_add(const char * const pathPri, const char * const pathPrd, const unsigned char * const data, const int lenData) {
 	if (pathPri == NULL || pathPrd == NULL || lenData < 1) return PACKRAT_ERROR_PARAM;
 
 	const int pri = open(pathPri, O_RDWR | O_NOCTTY);
@@ -231,7 +231,7 @@ int packrat_write(const char * const pathPri, const char * const pathPrd, const 
 	if (read(pri, (unsigned char*)&header, sizeof(struct packrat_header)) != sizeof(struct packrat_header)) {close(prd); close(pri); return PACKRAT_ERROR_READ_PRI;}
 	if (!headersMatch(&header, prd)) return PACKRAT_ERROR_MISMATCH;
 
-	const int ret = (header.bitsLen == 0) ? pr_write_compact(pri, prd, header.bitsPos + PACKRAT_OFFSET_BITSPOS, data, lenData) : pr_write_zero(pri, prd, header.bitsLen + PACKRAT_OFFSET_BITSLEN, header.bitsPos + PACKRAT_OFFSET_BITSPOS, data, lenData);
+	const int ret = (header.bitsLen == 0) ? pr_add_compact(pri, prd, header.bitsPos + PACKRAT_OFFSET_BITSPOS, data, lenData) : pr_add_zero(pri, prd, header.bitsLen + PACKRAT_OFFSET_BITSLEN, header.bitsPos + PACKRAT_OFFSET_BITSPOS, data, lenData);
 
 	flock(pri, LOCK_UN);
 	close(pri);

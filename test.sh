@@ -29,14 +29,24 @@ if [ $maxSize -gt 1234567 ]; then maxSize=1234567; fi
 
 echo "Testing bitsPos=$bitsPos; bitsLen=$bitsLen; $count files."
 
-$cmd --create --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" --posbits=$bitsPos --lenbits=$bitsLen
+if [ $(( $RANDOM % 2 )) -eq 1 ]; then
+	$cmd --create --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" --posbits=$bitsPos --lenbits=$bitsLen
+else
+	$cmd -c -d "/tmp/packrat-$$.prd" -i "/tmp/packrat-$$.pri" -p $bitsPos -l $bitsLen
+fi
 
 head -c 8 "/tmp/packrat-$$.pri" > "/tmp/packrat-$$.cmp"
 
 for i in $(seq 0 $count); do
 	size=$(shuf -i 1-$maxSize -n 1)
 	head -c $size /dev/urandom > "/tmp/packrat-$$.tmp.$i"
-	$cmd --write --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" -f "/tmp/packrat-$$.tmp.$i"
+
+	if [ $(( $RANDOM % 2 )) -eq 1 ]; then
+		$cmd --add --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" --file="/tmp/packrat-$$.tmp.$i"
+	else
+		$cmd -a -d "/tmp/packrat-$$.prd" -i "/tmp/packrat-$$.pri" -f "/tmp/packrat-$$.tmp.$i"
+	fi
+
 	cat "/tmp/packrat-$$.tmp.$i" >> "/tmp/packrat-$$.cmp"
 done
 
@@ -46,7 +56,11 @@ if ! cmp -s "/tmp/packrat-$$.cmp" "/tmp/packrat-$$.prd"; then
 else
 	# Test each file individually
 	for i in $(seq 0 $count); do
-		$cmd --read --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" -n $i -f "/tmp/packrat-$$.chk.$i"
+		if [ $(( $RANDOM % 2 )) -eq 1 ]; then
+			$cmd --get --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" --num=$i --file="/tmp/packrat-$$.chk.$i"
+		else
+			$cmd -g -d "/tmp/packrat-$$.prd" -i "/tmp/packrat-$$.pri" -n $i -f "/tmp/packrat-$$.chk.$i"
+		fi
 
 		if ! cmp -s "/tmp/packrat-$$.chk.$i" "/tmp/packrat-$$.tmp.$i"; then
 			echo "FAIL: extracted file $i does not match"
