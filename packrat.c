@@ -85,6 +85,7 @@ static int pr_get_zero(const int pri, const int prd, const unsigned long fileNum
 	if (r < 0) return PACKRAT_ERROR_READ_PRI;
 
 	const uint64_t readLen = extractPruint(raw, skipBits, bitsLen);
+	if (readLen == 0) return 0; // Placeholder
 	const uint64_t readPos = extractPruint(raw, skipBits + bitsLen, bitsPos);
 
 	if (readLen > (1UL << bitsPos)) return PACKRAT_ERROR_TOOBIG;

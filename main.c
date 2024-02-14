@@ -198,6 +198,7 @@ int main(int argc, char *argv[]) {
 			unsigned char *data;
 			const int lenData = packrat_get(pri, prd, fileNum, &data);
 
+			if (lenData == 0) return 0;
 			if (lenData < 1) {
 				printError(lenData);
 				return 1;
