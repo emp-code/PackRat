@@ -217,7 +217,18 @@ int main(int argc, char *argv[]) {
 				return EXIT_FAILURE;
 			}
 
-			writeFile(path, buf, (size_t)lenFile);
+			if (strcmp(path, "-") == 0) {
+				// Standard output
+				if (write(STDOUT_FILENO, buf, lenFile) != lenFile) {
+					free(buf);
+					puts("Failed writing to standard output");
+					return 1;
+				}
+			} else {
+				// File output
+				writeFile(path, buf, (size_t)lenFile);
+			}
+
 			free(buf);
 		break;}
 	}
