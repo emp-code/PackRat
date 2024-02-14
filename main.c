@@ -179,7 +179,10 @@ int main(int argc, char *argv[]) {
 				data = malloc(lenData);
 				if (data == NULL) return 1;
 
-				lenData = read(STDIN_FILENO, data, lenData);
+				if (read(STDIN_FILENO, data, lenData) != lenData) {
+					puts("Failed reading standard input");
+					return 1;
+				}
 			} else {
 				// File input
 				lenData = readFile(path, &data);
