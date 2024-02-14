@@ -57,12 +57,10 @@ static int readFile(const char * const path, unsigned char ** const data) {
 	const off_t lenData = lseek(fd, 0, SEEK_END);
 	if (lenData == 0) return 0;
 
-	lseek(fd, 0, SEEK_SET);
-
 	*data = malloc(lenData);
 	if (*data == NULL) return -1;
 
-	const ssize_t ret = read(fd, *data, lenData);
+	const ssize_t ret = pread(fd, *data, lenData, 0);
 	if (ret != lenData) {
 		close(fd);
 		free(*data);
