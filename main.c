@@ -60,6 +60,8 @@ static int readFile(const char * const path, unsigned char ** const data) {
 	lseek(fd, 0, SEEK_SET);
 
 	*data = malloc(lenData);
+	if (data == NULL) return -1;
+
 	const ssize_t ret = read(fd, *data, lenData);
 	if (ret != lenData) {
 		close(fd);
