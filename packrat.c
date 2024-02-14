@@ -190,7 +190,7 @@ static int pr_add_zero(const int pri, const int prd, int bitsLen, int bitsPos, c
 		// Not a placeholder
 		const off_t prdSize = lseek(prd, 0, SEEK_END);
 		if (prdSize < PACKRAT_HEADER_LEN) return PACKRAT_ERROR_READ_PRD;
-		if (prdSize - PACKRAT_HEADER_LEN + lenData >= (1L << bitsPos)) return PACKRAT_ERROR_TOOBIG;
+		if (prdSize - PACKRAT_HEADER_LEN >= (1L << bitsPos)) return PACKRAT_ERROR_TOOBIG;
 
 		const uint64_t raw2 = prdSize - PACKRAT_HEADER_LEN;
 		appendPruint(tbw, usedBits + bitsLen, raw2, bitsPos);
@@ -206,7 +206,7 @@ static int pr_add_compact(const int pri, const int prd, int bitsPos, const unsig
 
 	const off_t prdSize = lseek(prd, 0, SEEK_END);
 	if (prdSize < PACKRAT_HEADER_LEN) return PACKRAT_ERROR_READ_PRD;
-	if (prdSize - PACKRAT_HEADER_LEN + lenData >= (1L << bitsPos)) return PACKRAT_ERROR_TOOBIG;
+	if (prdSize - PACKRAT_HEADER_LEN >= (1L << bitsPos)) return PACKRAT_ERROR_TOOBIG;
 
 	const off_t priSize = lseek(pri, 0, SEEK_END);
 	if (priSize < PACKRAT_HEADER_LEN) return PACKRAT_ERROR_READ_PRI;
