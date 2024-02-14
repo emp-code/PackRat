@@ -55,14 +55,20 @@ static int readFile(const char * const path, unsigned char ** const data) {
 	if (fd < 0) return -1;
 
 	const off_t lenData = lseek(fd, 0, SEEK_END);
+	if (lenData == 0) return 0;
 
 	lseek(fd, 0, SEEK_SET);
 
 	*data = malloc(lenData);
 	const ssize_t ret = read(fd, *data, lenData);
+	if (ret != lenData) {
+		close(fd);
+		free(*data);
+		return -1;
+	}
 
 	close(fd);
-	return (ret == lenData) ? lenData : -2;
+	return lenData;
 }
 
 static int writeFile(const char * const path, const unsigned char * const data, const size_t lenData) {
@@ -166,22 +172,21 @@ int main(int argc, char *argv[]) {
 				return 1;
 			} else {
 				lenData = readFile(path, &data);
-				if (lenData < 1) {
+				if (lenData < 0) {
 					puts("Failed reading input file");
-					if (data != NULL) free(data);
 					return 1;
 				}
 			}
 
 			const int ret = packrat_add(pri, prd, data, lenData);
+			if (lenData > 0) free(data);
+
 			if (ret < 0) {
 				printError(ret);
 				return EXIT_FAILURE;
 			}
 
-			puts("File added to archive successfully.");
-
-			free(data);
+			if (lenData == 0) puts("Placeholder added successfully."); else puts("File added to archive successfully.");
 		break;}
 
 		case 'g': { // Get

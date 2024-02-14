@@ -169,10 +169,6 @@ int packrat_get(const char * const pathPri, const char * const pathPrd, const un
 static int pr_add_zero(const int pri, const int prd, int bitsLen, int bitsPos, const unsigned char * const data, const int lenData) {
 	if (lenData >= (1L << bitsLen)) return PACKRAT_ERROR_TOOBIG;
 
-	const off_t prdSize = lseek(prd, 0, SEEK_END);
-	if (prdSize < PACKRAT_HEADER_LEN) return PACKRAT_ERROR_READ_PRD;
-	if (prdSize - PACKRAT_HEADER_LEN + lenData >= (1L << bitsPos)) return PACKRAT_ERROR_TOOBIG;
-
 	const off_t priSize = lseek(pri, 0, SEEK_END);
 	if (priSize < PACKRAT_HEADER_LEN) return PACKRAT_ERROR_READ_PRI;
 
@@ -188,16 +184,23 @@ static int pr_add_zero(const int pri, const int prd, int bitsLen, int bitsPos, c
 	// Zero variant stores the length and position of each file
 	const uint64_t raw1 = lenData;
 	appendPruint(tbw, usedBits, raw1, bitsLen);
-	const uint64_t raw2 = prdSize - PACKRAT_HEADER_LEN;
-	appendPruint(tbw, usedBits + bitsLen, raw2, bitsPos);
 
-	if (pwrite(pri, (unsigned char*)&tbw, lenTbw, (usedBits > 0) ? priSize - 1 : priSize) != lenTbw) return PACKRAT_ERROR_WRITE;
-	if (write(prd, data, lenData) != (ssize_t)lenData) return PACKRAT_ERROR_WRITE;
+	if (lenData > 0) {
+		// Not a placeholder
+		const off_t prdSize = lseek(prd, 0, SEEK_END);
+		if (prdSize < PACKRAT_HEADER_LEN) return PACKRAT_ERROR_READ_PRD;
+		if (prdSize - PACKRAT_HEADER_LEN + lenData >= (1L << bitsPos)) return PACKRAT_ERROR_TOOBIG;
 
-	return PACKRAT_OK;
+		const uint64_t raw2 = prdSize - PACKRAT_HEADER_LEN;
+		appendPruint(tbw, usedBits + bitsLen, raw2, bitsPos);
+		if (write(prd, data, lenData) != (ssize_t)lenData) return PACKRAT_ERROR_WRITE;
+	}
+
+	return (pwrite(pri, (unsigned char*)&tbw, lenTbw, (usedBits > 0) ? priSize - 1 : priSize) == lenTbw) ? PACKRAT_OK : PACKRAT_ERROR_WRITE;
 }
 
 static int pr_add_compact(const int pri, const int prd, int bitsPos, const unsigned char * const data, const int lenData) {
+	if (lenData < 1) return PACKRAT_ERROR_PARAM;
 	if (bitsPos > 47) return PACKRAT_ERROR_HEADER;
 
 	const off_t prdSize = lseek(prd, 0, SEEK_END);
@@ -227,13 +230,13 @@ static int pr_add_compact(const int pri, const int prd, int bitsPos, const unsig
 }
 
 int packrat_add(const char * const pathPri, const char * const pathPrd, const unsigned char * const data, const int lenData) {
-	if (pathPri == NULL || pathPrd == NULL || lenData < 1) return PACKRAT_ERROR_PARAM;
+	if (pathPri == NULL || pathPrd == NULL || lenData < 0) return PACKRAT_ERROR_PARAM;
 
 	const int pri = open(pathPri, O_RDWR | O_NOCTTY);
 	if (pri < 0) return PACKRAT_ERROR_OPEN;
 	if (flock(pri, LOCK_EX | LOCK_NB) != 0) {close(pri); return PACKRAT_ERROR_LOCK;}
 
-	const int prd = open(pathPrd, O_RDWR | O_NOCTTY | O_APPEND);
+	const int prd = open(pathPrd, ((lenData > 0) ? O_RDWR : O_RDONLY) | O_NOCTTY | O_APPEND);
 	if (prd < 0) return PACKRAT_ERROR_OPEN;
 	if (flock(prd, LOCK_EX | LOCK_NB) != 0) {close(pri); close(prd); return PACKRAT_ERROR_LOCK;}
 

@@ -38,8 +38,13 @@ fi
 head -c 8 "/tmp/packrat-$$.prd" > "/tmp/packrat-$$.cmp"
 
 for i in $(seq 0 $count); do
-	size=$(shuf -i 1-$maxSize -n 1)
-	head -c $size /dev/urandom > "/tmp/packrat-$$.tmp.$i"
+	if [ $bitsLen -ne 0 ] && [ $(( $RANDOM % 2 )) -eq 1 ]; then
+		# Placeholder
+		touch "/tmp/packrat-$$.tmp.$i"
+	else
+		size=$(shuf -i 1-$maxSize -n 1)
+		head -c $size /dev/urandom > "/tmp/packrat-$$.tmp.$i"
+	fi
 
 	if [ $(( $RANDOM % 2 )) -eq 1 ]; then
 		$cmd --add --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" --file="/tmp/packrat-$$.tmp.$i"
@@ -56,6 +61,8 @@ if ! cmp -s "/tmp/packrat-$$.cmp" "/tmp/packrat-$$.prd"; then
 else
 	# Test each file individually
 	for i in $(seq 0 $count); do
+		touch "/tmp/packrat-$$.chk.$i" # Allow checking placeholders
+
 		if [ $(( $RANDOM % 2 )) -eq 1 ]; then
 			$cmd --get --data="/tmp/packrat-$$.prd" --index="/tmp/packrat-$$.pri" --num=$i --file="/tmp/packrat-$$.chk.$i"
 		else
