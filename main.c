@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -165,12 +166,22 @@ int main(int argc, char *argv[]) {
 
 		case 'a': { // Add
 			unsigned char *data = NULL;
-			int lenData;
+			int lenData = -1;
 
 			if (strcmp(path, "-") == 0) {
-				puts("TODO: stdin");
-				return 1;
+				// Standard input
+				const int r = ioctl(STDIN_FILENO, FIONREAD, &lenData);
+				if (r != 0 || lenData < 1) {
+					puts("Failed reading standard input");
+					return 1;
+				}
+
+				data = malloc(lenData);
+				if (data == NULL) return 1;
+
+				lenData = read(STDIN_FILENO, data, lenData);
 			} else {
+				// File input
 				lenData = readFile(path, &data);
 				if (lenData < 0) {
 					puts("Failed reading input file");
