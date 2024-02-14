@@ -72,20 +72,6 @@ static int readFile(const char * const path, unsigned char ** const data) {
 	return lenData;
 }
 
-static int writeFile(const char * const path, const unsigned char * const data, const size_t lenData) {
-	if (strcmp(path, "-") == 0) {
-		return (write(STDOUT_FILENO, data, lenData) == (ssize_t)lenData) ? 0 : -1;
-	}
-
-	const int fd = open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-	if (fd < 0) return -1;
-
-	const ssize_t r = write(fd, data, lenData);
-
-	close(fd);
-	return (r == (ssize_t)lenData) ? 0 : -1;
-}
-
 static void printError(const int e) {
 	switch (e) {
 		// General
@@ -209,27 +195,41 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 
-			unsigned char *buf;
-			const int lenFile = packrat_get(pri, prd, fileNum, &buf);
+			unsigned char *data;
+			const int lenData = packrat_get(pri, prd, fileNum, &data);
 
-			if (lenFile < 1) {
-				printError(lenFile);
-				return EXIT_FAILURE;
+			if (lenData < 1) {
+				printError(lenData);
+				return 1;
 			}
 
 			if (strcmp(path, "-") == 0) {
 				// Standard output
-				if (write(STDOUT_FILENO, buf, lenFile) != lenFile) {
-					free(buf);
+				if (write(STDOUT_FILENO, data, lenData) != lenData) {
+					free(data);
 					puts("Failed writing to standard output");
 					return 1;
 				}
 			} else {
 				// File output
-				writeFile(path, buf, (size_t)lenFile);
+				const int outfd = open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+				if (outfd < 0) {
+					free(data);
+					puts("Failed opening file");
+					return 1;
+				}
+
+				if (write(outfd, data, lenData) != lenData) {
+					close(outfd);
+					free(data);
+					puts("Failed writing to file");
+					return 1;
+				}
+
+				close(outfd);
 			}
 
-			free(buf);
+			free(data);
 		break;}
 	}
 
