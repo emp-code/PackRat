@@ -53,7 +53,7 @@ static int packrat_v2_read_compact(const int pri, const int bitsPos, const char 
 
 	const uint64_t pos = getPos(pri, infoBytes, id, bitsPos);
 
-	if (pos == UINT64_MAX) {close(pri); return PACKRAT_V2_ERROR_MISC;}
+	if (pos == UINT64_MAX) {close(pri); return PACKRAT_V2_ERROR_END;}
 	if (data == NULL) {close(pri); return PACKRAT_V2_ERROR_NODATA;}
 
 	// Pack Rat Data: File contents
