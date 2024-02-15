@@ -12,6 +12,6 @@
 #define PACKRAT_V2_ERROR_ID -50
 #define PACKRAT_V2_ERROR_END -99
 
-int packrat_v2_read(const char * const pathPri, const char * const pathPrd, const int id, char ** const data);
+int packrat_v2_read(const char * const pathPri, const char * const pathPrd, const int id, unsigned char ** const data);
 
 #endif

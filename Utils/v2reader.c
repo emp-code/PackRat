@@ -8,7 +8,7 @@
 
 // packrat-v2reader: Tool to extract individual files from Pack Rat v2 archives (pre-2024, file signature 'Pr')
 
-static int writeFile(const char * const path, const char * const data, const int lenData) {
+static int writeFile(const char * const path, const unsigned char * const data, const int lenData) {
 	const int fd = open(path, O_WRONLY | O_CREAT, 0644);
 	if (fd < 0) return -1;
 
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	char *buf = NULL;
+	unsigned char *buf = NULL;
 	const int lenFile = packrat_v2_read(pri, prd, fileNum, &buf);
 
 	if (lenFile < 0) {
