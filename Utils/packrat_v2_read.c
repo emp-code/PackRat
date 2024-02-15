@@ -116,7 +116,7 @@ static int packrat_v2_read_zero(const int pri, const int bitsPos, const int bits
 	const uint64_t len = pruint_fetch(info, bitsPos, bitsLen);
 	close(pri);
 
-	if (len == 0) return PACKRAT_ERROR_EMPTY;
+	if (len == 0) return 0; // Placeholder
 	if (data == NULL) return PACKRAT_ERROR_NODATA;
 
 	// Pack Rat Data: File contents
