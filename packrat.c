@@ -27,11 +27,11 @@ union packrat_header {
 	} fields;
 };
 
-static int div_floor(const int a, const int b) {
+static int div_floor(const int64_t a, const int64_t b) {
 	return (a - (a % b)) / b;
 }
 
-static int div_ceil(const int a, const int b) {
+static int div_ceil(const int64_t a, const int64_t b) {
 	return (a % b == 0) ? a / b : div_floor(a, b) + 1;
 }
 
