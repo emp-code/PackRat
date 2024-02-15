@@ -96,7 +96,11 @@ int main(int argc, char *argv[]) {
 
 	if (lenFile > 0) {
 		if (strcmp(path, "-") == 0) {
-			write(STDOUT_FILENO, buf, lenFile);
+			if (write(STDOUT_FILENO, buf, lenFile) != lenFile) {
+				puts("Failed writing to stdout");
+				if (buf != NULL) free(buf);
+				return 1;
+			}
 		} else {
 			writeFile(path, buf, lenFile);
 			printf("Extracted file #%d to %s\n", fileNum, path);
