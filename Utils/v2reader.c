@@ -70,6 +70,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	if (path == NULL || prd == NULL || pri == NULL || fileNum < 0) {
+		printf("Usage: %s --data=example.prd --index=example.pri --num=0 --file=out.put\n", argv[0]);
+		return 1;
+	}
+
 	char *buf = NULL;
 	const int lenFile = packrat_v2_read(pri, prd, fileNum, &buf);
 
