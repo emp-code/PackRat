@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	char *buf;
+	char *buf = NULL;
 	const int lenFile = packrat_v2_read(pri, prd, fileNum, &buf);
 
 	if (lenFile < 1) {
@@ -97,6 +97,6 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	free(buf);
+	if (buf != NULL) free(buf);
 	return 0;
 }
