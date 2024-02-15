@@ -8,14 +8,14 @@
 
 // packrat-v2reader: Tool to extract individual files from Pack Rat v2 archives (pre-2024, file signature 'Pr')
 
-static int writeFile(const char * const path, const char * const data, const size_t lenData) {
+static int writeFile(const char * const path, const char * const data, const int lenData) {
 	const int fd = open(path, O_WRONLY | O_CREAT, 0644);
 	if (fd < 0) return -1;
 
 	const int ret = write(fd, data, lenData);
 	close(fd);
 
-	return ret;
+	return (ret == lenData) ? 0 : -1;
 }
 
 static int getArgInt(char * const argv[], const int n, const char * const longname, int * const i) {
@@ -102,7 +102,12 @@ int main(int argc, char *argv[]) {
 				return 1;
 			}
 		} else {
-			writeFile(path, buf, lenFile);
+			if (writeFile(path, buf, lenFile) != 0) {
+				puts("Failed writing to file");
+				if (buf != NULL) free(buf);
+				return 1;
+			}
+
 			printf("Extracted file #%d to %s\n", fileNum, path);
 		}
 	}
