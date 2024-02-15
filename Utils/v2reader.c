@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 	char *buf = NULL;
 	const int lenFile = packrat_v2_read(pri, prd, fileNum, &buf);
 
-	if (lenFile < 1) {
+	if (lenFile < 0) {
 		switch (lenFile) {
 			case PACKRAT_ERROR_MISC: puts("Error: Miscellaneous error"); break;
 			case PACKRAT_ERROR_ALLOC: puts("Error: Allocating memory failed (out of memory?)"); break;
