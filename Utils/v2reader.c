@@ -88,11 +88,13 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	if (strcmp(path, "-") == 0) {
-		write(STDOUT_FILENO, buf, lenFile);
-	} else {
-		writeFile(path, buf, lenFile);
-		printf("Extracted file #%d to %s\n", fileNum, path);
+	if (lenFile > 0) {
+		if (strcmp(path, "-") == 0) {
+			write(STDOUT_FILENO, buf, lenFile);
+		} else {
+			writeFile(path, buf, lenFile);
+			printf("Extracted file #%d to %s\n", fileNum, path);
+		}
 	}
 
 	free(buf);
