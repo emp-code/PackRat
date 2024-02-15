@@ -12,10 +12,10 @@ static int writeFile(const char * const path, const char * const data, const siz
 	const int fd = open(path, O_WRONLY | O_CREAT, 0644);
 	if (fd < 0) return -1;
 
-	write(fd, data, lenData);
-
+	const int ret = write(fd, data, lenData);
 	close(fd);
-	return 0;
+
+	return ret;
 }
 
 static int getArgInt(char * const argv[], const int n, const char * const longname, int * const i) {
