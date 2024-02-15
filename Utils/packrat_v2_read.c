@@ -43,7 +43,7 @@ static uint64_t getPos(const int pri, const int infoBytes, const int id, const i
 
 // Read: Pack Rat Compact (PrC)
 static int packrat_v2_read_compact(const int pri, const int bitsPos, const char *pathPrd, const int id, char ** const data) {
-	if (pri < 0) return PACKRAT_ERROR_MISC;
+	if (pri < 0) return PACKRAT_V2_ERROR_MISC;
 
 	const off_t endPri = lseek(pri, 0, SEEK_END);
 	const int infoBytes = bytesInBits(bitsPos, bytesInBits_UP);
@@ -53,8 +53,8 @@ static int packrat_v2_read_compact(const int pri, const int bitsPos, const char 
 
 	const uint64_t pos = getPos(pri, infoBytes, id, bitsPos);
 
-	if (pos == UINT64_MAX) {close(pri); return PACKRAT_ERROR_MISC;}
-	if (data == NULL) {close(pri); return PACKRAT_ERROR_NODATA;}
+	if (pos == UINT64_MAX) {close(pri); return PACKRAT_V2_ERROR_MISC;}
+	if (data == NULL) {close(pri); return PACKRAT_V2_ERROR_NODATA;}
 
 	// Pack Rat Data: File contents
 	if ((5 + (id + 1) * infoBytes) >= endPri) {
@@ -62,7 +62,7 @@ static int packrat_v2_read_compact(const int pri, const int bitsPos, const char 
 		close(pri);
 
 		prd = open(pathPrd, O_RDONLY);
-		if (prd == -1) return PACKRAT_ERROR_OPEN;
+		if (prd == -1) return PACKRAT_V2_ERROR_OPEN;
 
 		// Length is eof - start
 		const uint64_t endPrd = lseek(prd, 0, SEEK_END);
@@ -72,21 +72,21 @@ static int packrat_v2_read_compact(const int pri, const int bitsPos, const char 
 		len = end - pos;
 		close(pri);
 
-		if (len < 1) return PACKRAT_ERROR_EMPTY;
+		if (len < 1) return PACKRAT_V2_ERROR_EMPTY;
 
 		prd = open(pathPrd, O_RDONLY);
-		if (prd == -1) return PACKRAT_ERROR_OPEN;
+		if (prd == -1) return PACKRAT_V2_ERROR_OPEN;
 	}
 
 	*data = malloc(len + 1);
-	if (*data == NULL) return PACKRAT_ERROR_ALLOC;
+	if (*data == NULL) return PACKRAT_V2_ERROR_ALLOC;
 
 	const ssize_t bytesRead = pread(prd, *data, len, pos);
 	close(prd);
 
 	if (bytesRead != (ssize_t)len) {
 		free(*data);
-		return PACKRAT_ERROR_READWRITE;
+		return PACKRAT_V2_ERROR_READWRITE;
 	}
 
 	return len;
@@ -94,22 +94,22 @@ static int packrat_v2_read_compact(const int pri, const int bitsPos, const char 
 
 // Read: Pack Rat Zero (Pr0)
 static int packrat_v2_read_zero(const int pri, const int bitsPos, const int bitsLen, const char * const pathPrd, const int id, char ** const data) {
-	if (pri < 0) return PACKRAT_ERROR_MISC;
+	if (pri < 0) return PACKRAT_V2_ERROR_MISC;
 
 	const int infoBytes = bytesInBits(bitsPos + bitsLen, bytesInBits_UP);
 	const int readPos = 5 + (id * infoBytes);
 
 	// Pack Rat Index: Error checking
 	const off_t priSize = lseek(pri, 0, SEEK_END);
-	if (priSize < 6) return PACKRAT_ERROR_CORRUPT;
-	if (readPos + infoBytes > priSize) return PACKRAT_ERROR_ID;
+	if (priSize < 6) return PACKRAT_V2_ERROR_CORRUPT;
+	if (readPos + infoBytes > priSize) return PACKRAT_V2_ERROR_ID;
 
 	// Pack Rat Index: Position and Length
 	char info[infoBytes];
 	ssize_t bytesRead = pread(pri, info, infoBytes, readPos);
 	if (bytesRead != infoBytes) {
 		close(pri);
-		return PACKRAT_ERROR_READWRITE;
+		return PACKRAT_V2_ERROR_READWRITE;
 	}
 
 	const uint64_t pos = pruint_fetch(info, 0,       bitsPos);
@@ -117,30 +117,30 @@ static int packrat_v2_read_zero(const int pri, const int bitsPos, const int bits
 	close(pri);
 
 	if (len == 0) return 0; // Placeholder
-	if (data == NULL) return PACKRAT_ERROR_NODATA;
+	if (data == NULL) return PACKRAT_V2_ERROR_NODATA;
 
 	// Pack Rat Data: File contents
 	const int prd = open(pathPrd, O_RDONLY);
-	if (prd == -1) return PACKRAT_ERROR_OPEN;
+	if (prd == -1) return PACKRAT_V2_ERROR_OPEN;
 
 	const off_t prdSize = lseek(prd, 0, SEEK_END);
 	if (prdSize < 1) {
 		close(prd);
-		return PACKRAT_ERROR_READWRITE;
+		return PACKRAT_V2_ERROR_READWRITE;
 	} else if (pos + len > (unsigned long)prdSize) {
 		close(prd);
-		return PACKRAT_ERROR_CORRUPT;
+		return PACKRAT_V2_ERROR_CORRUPT;
 	}
 
 	*data = malloc(len + 1);
-	if (*data == NULL) return PACKRAT_ERROR_ALLOC;
+	if (*data == NULL) return PACKRAT_V2_ERROR_ALLOC;
 
 	bytesRead = pread(prd, *data, len, pos);
 	close(prd);
 
 	if (bytesRead != (ssize_t)len) {
 		free(*data);
-		return PACKRAT_ERROR_READWRITE;
+		return PACKRAT_V2_ERROR_READWRITE;
 	}
 
 	return len;
@@ -151,13 +151,13 @@ int packrat_v2_read(const char * const pathPri, const char * const pathPrd, cons
 	if (pathPri == NULL || pathPrd == NULL || id < 0) return -1;
 
 	const int pri = open(pathPri, O_RDONLY);
-	if (pri == -1) return PACKRAT_ERROR_OPEN;
+	if (pri == -1) return PACKRAT_V2_ERROR_OPEN;
 
 	char header[5];
 	const ssize_t bytesRead = read(pri, header, 5);
-	if (bytesRead != 5) return PACKRAT_ERROR_READWRITE;
+	if (bytesRead != 5) return PACKRAT_V2_ERROR_READWRITE;
 
-	if (header[0] != 'P' || header[1] != 'r') return PACKRAT_ERROR_FILESIG;
+	if (header[0] != 'P' || header[1] != 'r') return PACKRAT_V2_ERROR_FILESIG;
 
 	const int bitsPos = header[3];
 	const int bitsLen = header[4];

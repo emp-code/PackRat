@@ -80,14 +80,14 @@ int main(int argc, char *argv[]) {
 
 	if (lenFile < 0) {
 		switch (lenFile) {
-			case PACKRAT_ERROR_MISC: puts("Error: Miscellaneous error"); break;
-			case PACKRAT_ERROR_ALLOC: puts("Error: Allocating memory failed (out of memory?)"); break;
-			case PACKRAT_ERROR_FILESIG: puts("Error: File signature does not match (not a Pack Rat archive?)"); break;
-			case PACKRAT_ERROR_CORRUPT: puts("Error: Index file corrupted"); break;
-			case PACKRAT_ERROR_OPEN: puts("Error: Failed to open file"); break;
-			case PACKRAT_ERROR_READWRITE: puts("Error: Failed to read file"); break;
-			case PACKRAT_ERROR_EMPTY: puts("Error: The requested file is empty"); break;
-			case PACKRAT_ERROR_ID: puts("Error: The requested file does not exist"); break;
+			case PACKRAT_V2_ERROR_MISC: puts("Error: Miscellaneous error"); break;
+			case PACKRAT_V2_ERROR_ALLOC: puts("Error: Allocating memory failed (out of memory?)"); break;
+			case PACKRAT_V2_ERROR_FILESIG: puts("Error: File signature does not match (not a Pack Rat archive?)"); break;
+			case PACKRAT_V2_ERROR_CORRUPT: puts("Error: Index file corrupted"); break;
+			case PACKRAT_V2_ERROR_OPEN: puts("Error: Failed to open file"); break;
+			case PACKRAT_V2_ERROR_READWRITE: puts("Error: Failed to read file"); break;
+			case PACKRAT_V2_ERROR_EMPTY: puts("Error: The requested file is empty"); break;
+			case PACKRAT_V2_ERROR_ID: puts("Error: The requested file does not exist"); break;
 			default: printf("Unexpected error: %d\n", lenFile);
 		}
 
