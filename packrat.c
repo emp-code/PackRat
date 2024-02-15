@@ -77,8 +77,8 @@ static bool headersMatch(const union packrat_header pri_hdr, const int fd) {
 
 static int pr_get_zero(const int pri, const int prd, const unsigned long fileNum, const int bitsLen, const int bitsPos, unsigned char ** const data) {
 	const int64_t priPos = PACKRAT_HEADER_LEN + div_floor((bitsLen + bitsPos) * fileNum, 8); // Byte number to start reading from
-	const long skipBits = ((bitsLen + bitsPos) * fileNum) % 8; // Number of irrelevant bits in the first byte, to be skipped
-	const long priBytes = div_ceil(skipBits + bitsLen + bitsPos, 8);
+	const int skipBits = ((bitsLen + bitsPos) * fileNum) % 8; // Number of irrelevant bits in the first byte, to be skipped
+	const int priBytes = div_ceil(skipBits + bitsLen + bitsPos, 8);
 
 	unsigned char raw[priBytes];
 	ssize_t r = pread(pri, raw, priBytes, priPos);
@@ -105,8 +105,8 @@ static int pr_get_zero(const int pri, const int prd, const unsigned long fileNum
 
 static int pr_get_compact(const int pri, const int prd, const unsigned long fileNum, const int bitsPos, unsigned char ** const data) {
 	const int64_t priPos = PACKRAT_HEADER_LEN + div_floor(bitsPos * fileNum, 8); // Byte number to start reading from
-	const long skipBits = (bitsPos * fileNum) % 8; // Number of irrelevant bits in the first byte, to be skipped
-	const long priBytes = div_ceil(skipBits + (bitsPos * 2), 8);
+	const int skipBits = (bitsPos * fileNum) % 8; // Number of irrelevant bits in the first byte, to be skipped
+	const int priBytes = div_ceil(skipBits + (bitsPos * 2), 8);
 
 	unsigned char raw[priBytes];
 	ssize_t r = pread(pri, raw, priBytes, priPos);
