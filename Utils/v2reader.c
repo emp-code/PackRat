@@ -88,6 +88,7 @@ int main(int argc, char *argv[]) {
 			case PACKRAT_ERROR_READWRITE: puts("Error: Failed to read file"); break;
 			case PACKRAT_ERROR_EMPTY: puts("Error: The requested file is empty"); break;
 			case PACKRAT_ERROR_ID: puts("Error: The requested file does not exist"); break;
+			default: printf("Unexpected error: %d\n", lenFile);
 		}
 
 		return EXIT_FAILURE;
